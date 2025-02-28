@@ -1,0 +1,182 @@
+/* $Id: imapsync_form.css,v 1.10 2021/09/21 09:25:53 gilles Exp gilles $ */
+
+:root {
+    --pink: #e0819d;
+    --white: #fcfcfc;
+    --red: #c1033c;
+    --blue: #163052;
+    --green: #247155;
+    --orange: #f36c31;
+    --bred: #ff003d;
+    --bgreen: #1fa55d;
+}
+
+body {
+    color: white;
+    background-color: var(--blue);
+}
+
+#account1,
+#account2,
+#parameters {
+    background-color: #9a032f;
+    /* border: 3px solid var(--pink); */
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 0px 15px 0 black;
+    width: 400px;
+    min-height: 130px;
+}
+#parameters {
+    font-size: 2rem;
+}
+
+#progress-txt {
+    text-align: center;
+    font-size: 1.4em;
+    margin: 0 0 0px;
+    height: 50px;
+}
+
+#imapsync_log_bottom {
+    scroll-margin-top: 300px;
+}
+
+.progress {
+    /* text-align: center ; */
+    /* font-size: 1.4em ; */
+    margin: 0 0 0px;
+}
+
+.progress-bar {
+    text-align: center;
+    font-size: 1.4em;
+    margin: 0 0 0px;
+}
+
+.padd0 {
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+.custom-btn {
+    background-color: var(--blue);
+    color: white;
+    border: 3px solid var(--white);
+    padding: 10px 20px;
+    border-radius: 4px;
+    text-decoration: none;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    margin-top: 8px;
+    margin: 8px 4px 4px 0;
+    float: right;
+}
+
+.custom-btn:hover {
+    background-color: var(--red);
+}
+
+.custom-btn:focus {
+    outline: none;
+}
+
+.custom-btn:active {
+    background-color: var(--red);
+}
+
+#abort,
+#output {
+    height: 300px;
+}
+
+#consoleStop,
+#account2,
+#parameters,
+#startSync,
+#next2,
+#next3,
+#log {
+    display: none;
+}
+
+#bt-sync {
+    background-color: var(--green);
+}
+
+#bt-abort {
+    background-color: var(--red);
+}
+
+#bt-sync:hover,
+#bt-abort:hover {
+    color: #dbdbdb;
+}
+
+p,
+label {
+    font-size: 1.8rem;
+}
+
+form {
+    margin: 16px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 16px;
+}
+#consoleStop,
+#log {
+    margin-bottom: 32px;
+    background-color: var(--blue);
+    color: white;
+    border: 3px solid var(--white);
+    width: 400px;
+    height: 430px;
+    overflow: auto;
+}
+
+a {
+    color: var(--red);
+}
+a:hover {
+    color: var(--pink);
+}
+
+#progress-text {
+    font-size: 1.4em;
+    margin: 1rem auto;
+    height: 50px;
+}
+
+.progress-bar {
+    width: 50%;
+    height: 3rem;
+    margin: 0 0 0px;
+}
+
+pre {
+    background-color: transparent;
+    color: white;
+    border: none;
+}
+
+.btn-mar {
+    margin: 16px;
+}
+
+@media (max-width: 1000px) {
+    #console-log {
+        flex-direction: column;
+    }
+}
+#toggleConsole.custom-btn {
+    float: none;
+    display: block;
+    margin: 0 auto;
+    margin-bottom: 16px;
+}
