@@ -1,402 +1,297 @@
 <!DOCTYPE html>
-
-<!-- $Id: imapsync_form_extra.html,v 1.35 2024/08/06 18:43:50 gilles Exp gilles $ -->
-
 <html lang="en" id="top">
-
-
-<head>
-<!--
-        <script
-        data-ad-client="ca-pub-3325993554161060"
-        async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js">
-        </script>
--->
-
-        <title>Mailbox Imapsync Online</title>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
-	integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
-	integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-
-        <link rel="stylesheet" href="imapsync_form.css">
-        <link rel="stylesheet" href="../S/style.css" type="text/css"   />
-
-        <link rel="license" href="https://imapsync.lamiral.info/NOLIMIT">
-
-        <noscript>
-        <link rel="stylesheet" href="noscript.css">
-        </noscript>
-        <link rel="icon" href="./favicon.ico" type="image/x-icon" />
-</head>
-
-<body>
-
-
-<div class="scripton">
-        <!-- will appear if some tests fail -->
-        <pre id="tests" class="collapse"></pre>
-        <!-- hidden stuff that must exit for the tests -->
-        <div class="hidden">
-                <input type="checkbox" id="test_checkbox">
-                <input type="text" id="test_text">
-                <input type="radio" id="test_radio1" name="test_radio" value="first" >
-                <input type="radio" id="test_radio2" name="test_radio" value="second" >
-        </div>
-</div>
-
-<div class="container-fluid" >
-
-    <!-- <div class="row">
-        <div class="text-center">
-            <a href="https://imapsync.lamiral.info/">
-            <img alt="Imapsync home" title="Imapsync home page" src="https://imapsync.lamiral.info/X/logo_imapsync_Xn.png" height="38" width="60">
-            </a>
-            <a href="#top" title="Top of the page" class="btn btn-info " role="button">Top</a>
-            <a href="#bottom" title="Bottom of the page" class="btn btn-info active" role="button">Bottom</a>
-        </div>
-    </div> -->
-
-    <h1 class="text-center">Imapsync Online</h1>
-
-    <p class="text-center larger"> <strong>Copy/synchronize</strong> a <strong>complete Mailbox</strong> to another,
-    without <strong>duplicates!</strong>
-    </p>
-
-
-    <form id="form" action="/cgi-bin/imapsync" method="post" autocomplete="on">
-        <div id="form_row" class="row">
-            <div id="account1" class="col-md-5" >
-                <fieldset>
-                <legend class="text-center h2">IMAP source Mailbox</legend>
-
-                <label for="user1">Login</label> (usually an email address)
-                <div class="input-group form-group">
-                    <span class="input-group-addon"><i class="glyphicon glyphicon-user"> </i></span>
-                    <input
-                        data-toggle="tooltip" data-placement="bottom" title="It is usually an email address or its left part before @"
-                        type="text" class="form-control input-lg" id="user1" name="user1" tabindex="1"
-                        placeholder="Enter login name"
-                    >
-                </div>
-
-                <label for="password1">Password</label>
-                <label class="checkbox-inline out">
-                    <input type="checkbox" id="showpassword1"> show password
-                </label>
-                <div class="input-group form-group">
-                    <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
-                    <input
-                        data-toggle="tooltip" data-placement="bottom" title="Passwords are not stored on the server"
-                        type="password" class="form-control input-lg" id="password1" name="password1" tabindex="2"
-                        placeholder="Enter password"
-                >
-                </div>
-
-                <label for="host1">IMAP Server hostname</label> (or its IP address)
-                <div class="input-group form-group">
-                    <span class="input-group-addon"><i class="glyphicon glyphicon-cloud"></i></span>
-                    <input
-                        data-toggle="tooltip" data-placement="bottom" title="IMAP transfers are done with encryption if the servers support it."
-                        list="servers1" type="text" class="form-control input-lg" id="host1" name="host1" tabindex="3"
-                        placeholder="Enter IMAP source server name"
-                    >
-                    <datalist id="servers1">
-                        <option value="imap.gmail.com">
-                        <option value="outlook.office365.com">
-                        <option value="imap.hostinger.com">
-                        <option value="ssl0.ovh.net">
-                        <option value="email-ssl.com.br">
-                        <option value="imap.mail.yahoo.com">
-                    </datalist>
-                </div>
-
-                <!-- <div class="form-group extra_param">
-                    <label class="checkbox-inline">
-                    <input
-                        data-toggle="tooltip" data-placement="bottom" title="Be careful with this option"
-                        type="checkbox" id="delete1" name="delete1"
-                    >
-                    Move sync. Deletes messages on source mailbox after a successful transfer.
-                    </label>
-                </div> -->
-
-                <!-- <div class="form-group extra_param" >
-                <label for="subfolder1">Sub-folder</label>
-                <div class="input-group form-group">
-                    <span class="input-group-addon"><i class="glyphicon glyphicon-folder-open"></i></span>
-                    <input
-                        data-toggle="tooltip" data-placement="bottom" title="A subfolder where all the source mailbox comes from."
-                        type="text" class="form-control input-lg" id="subfolder1" name="subfolder1"
-                        placeholder="Enter sub-folder name"
-                    >
-                </div>
-                </div> -->
-
-                <div>
-                    <br>
-                </div>
-                <button class="custom-btn float-right" id="next1" type="button">Next</button>
-                </fieldset>
-            </div>
-
-            <div id="parameters" class="col-md-2" >
-
-                <div>
-                    <label class="checkbox-inline">
-                    <input
-                        data-toggle="tooltip" data-placement="bottom" title="Shows what would be done without really doing it."
-                        type="checkbox" id="dry" name="dry"
-                    >
-                    Just verbose, no real sync.
-                    </label>
-                </div>
-
-                <div>
-                    <label class="checkbox-inline">
-                    <input
-                        data-toggle="tooltip" data-placement="bottom" title="Checks credentials without syncing anything."
-                        type="checkbox" id="justlogin" name="justlogin"
-                    >
-                        Verify login information
-                    </label>
-                    <button class="custom-btn" id="next2" type="button">Next</button>
-                </div>
-
-                <!-- <div id="button_extra_param" class="text-center scripton">
-                        <button type="button" class="btn btn-default btn-block" data-toggle="collapse"
-                        data-target=".extra_param">Show / Hide extra parameters</button>
-                </div>
-
-                <div>
-                        <br>
-                </div>
-
-                <div id="button_swap" class="text-center scripton">
-                        <button type="button" class="btn btn-default btn-block" id="swap">
-                        Swap Source <span class="glyphicon glyphicon-transfer"></span> Destination
-                        </button>
-
-                </div> -->
-
-            </div>
-
-
-            <div id="account2" class="col-md-5" >
-                <fieldset>
-                <legend class="text-center h2">IMAP destination Mailbox</legend>
-
-                <label for="user2">Login</label> (usually an email address)
-                <div class="input-group form-group">
-                    <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-                    <input
-                        data-toggle="tooltip" data-placement="bottom" title="It is usually an email address or its left part before @"
-                        type="text" class="form-control input-lg" id="user2" name="user2" tabindex="6"
-                        placeholder="Enter login name"
-                    >
-                </div>
-                <label for="password2">Password</label>
-                <label class="checkbox-inline out">
-                    <input type="checkbox" id="showpassword2"> show password
-                </label>
-                <div class="input-group form-group">
-                    <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
-                    <input
-                        data-toggle="tooltip" data-placement="bottom" title="Passwords are not stored on the server"
-                        type="password" class="form-control input-lg" id="password2" name="password2" tabindex="7"
-                        placeholder="Enter password"
-                     >
-                </div>
-
-                <label for="host2">IMAP Server hostname</label>
-                <div class="input-group form-group">
-                    <span class="input-group-addon"><i class="glyphicon glyphicon-cloud"></i></span>
-                    <input
-                        data-toggle="tooltip" data-placement="bottom" title="IMAP transfers are done with encryption if the servers support it."
-                        list="servers2" type="text" class="form-control input-lg" id="host2" name="host2" tabindex="8"
-                        placeholder="Enter IMAP destination server name"
-                     >
-                     <datalist id="servers2">
-                        <option value="imap.gmail.com">
-                        <option value="outlook.office365.com">
-                        <option value="imap.hostinger.com">
-                        <option value="ssl0.ovh.net">
-                        <option value="email-ssl.com.br">
-                        <option value="imap.mail.yahoo.com">
-                     </datalist>
-                </div>
-                <!-- -->
-                <div class="form-group collapse extra_param">
-                    <label class="checkbox-inline">
-                    <input
-                        data-toggle="tooltip" data-placement="bottom" title="Be careful with this option"
-                        type="checkbox" id="delete2" name="delete2" tabindex="9"
-                    >
-                    Strict sync. Deletes messages on destination mailbox that are not at the source mailbox.
-                    </label>
-                </div>
-
-                <!-- <div class="form-group collapse extra_param" id="extra_subfolder2" >
-                <label for="subfolder2">Sub-folder</label>
-                <div class="input-group form-group">
-                    <span class="input-group-addon"><i class="glyphicon glyphicon-folder-open"></i></span>
-                    <input
-                        data-toggle="tooltip" data-placement="bottom" title="A subfolder where all the source mailbox will go."
-                        type="text" class="form-control input-lg" id="subfolder2" name="subfolder2"
-                        placeholder="Enter sub-folder name"
-                    >
-                </div>
-                </div> -->
-
-
-                <button class="custom-btn" id="next3" type="button">Next</button>
-                </fieldset>
-           </div>
-
-
-            <input
-                data-toggle="tooltip" data-placement="bottom" title="Extra parameters like in the imapsync command line."
-                type="text" class="form-control input-lg collapse extra_param" id="extra" name="extra"
-                placeholder="Enter extra parameters"
-            >
-
-
-        <!-- </div> -->
-
-
-        <input type="hidden" name="automap"   value="on">
-        <input type="hidden" name="addheader" value="on">
-        <!-- -#->
-        <input type="hidden" name="log" value="on">
-        <input type="hidden" name="simulong" value="360">
-        <input type="hidden" name="exitwhenover" value="3000000000">
-        <!-#- -->
-
-        <a id="buttons"></a>
-        <br>
-        <div id="startSync">
-
-            <div class="text-center center-block">
-                If you <b>close</b> this <b>window</b> (or this tab) <b>during</b> the synchronization,
-                it will <b>stop</b> the synchronization, it's like <b>hitting</b> the red button <b>"Stop!"</b> below.
-            </div>
-            <br>
-            <!-- Classical button to go to the log only, when javascript is turned off -->
+    <head>
+            <title>Mailbox Imapsync Online</title>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <script src="https://cdn.tailwindcss.com"></script>
+            <!-- <link rel="stylesheet" href="imapsync_form.css"> -->
+            <!-- <link rel="stylesheet" href="../S/style.css" type="text/css"/> -->
+             <link rel="stylesheet" href="imapsync_form.css"/>
+            <link rel="license" href="https://imapsync.lamiral.info/NOLIMIT">
+        
             <noscript>
-                <div class="row">
-                    <div class="col-sm-12 padd0" >
-                        <button type="submit" class="btn btn-success btn-lg center-block btn-block">Go sync!</button>
+                <link rel="stylesheet" href="noscript.css">
+            </noscript>
+            <link rel="icon" href="./favicon.ico" type="image/x-icon" />
+            <!-- Font Awesome CDN link -->
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" />
+            
+        </head>
+        <body>
+            <header class="text-center">
+                <h1 class="text-4xl p-3">Imapsync Online</h1>
+                <p class="text-lg p-3"> <strong>Copy/synchronize</strong> a <strong>complete Mailbox</strong>
+                     to another, without <strong>duplicates!</strong>
+                </p>
+            </header>
+            <div id="main" class="flex flex-col justify-center items-center">
+                <form id="form" action="/cgi-bin/imapsync" method="post" autocomplete="on">
+               <div id="start" class="box flex flex-col m-0 p-0 rounded-lg border-4 h-[600px] w-[800px]">
+                    <div class="first flex justify-start items-center">
+                        <div class="text-2xl pl-4 py-2 h-full">Start an e-mail migration</div>
+                    </div>
+                    <hr>
+        
+                    <div class="second flex flex-col justify-start items-center gap-4 m-4 h-full">
+                        <i class="fa-solid fa-envelope fa-2x"></i>
+                        <p class="text-3xl text-center">What is your current e-mail?
+                        </p>
+                        
+                        <div class="flex flex-row justify-center items-start gap-4 h-[200px] w-full">
+                            <div class="flex flex-col w-[300px] mt-20 gap-2">
+                                <input id="user1" class="text-white rounded-lg p-2 border-2"
+                                    placeholder="source@example.net" name="user1" />
+                                <label for="user1" class="text-gray-500">This is the source mail</label>
+                            </div>
+                        </div>
+                        <button type="button" id="next1" class="border-2 p-2 w-[100px] rounded-lg mt-13">Next</button>
+                        
                     </div>
                 </div>
-            </noscript>
+        
+               <div id="imapserver" class="box flex flex-col m-0 p-0 rounded-lg border-4 h-[600px] w-[800px] hidden">
+                    <div class="first flex justify-start items-center">
+                        <div class="text-2xl pl-4 py-2 h-full">Start an e-mail migration</div>
+                    </div>
+                    <hr>
+        
+                    <div class="second flex flex-col justify-start items-center gap-4 m-4 h-full">
+                        <i class="fa-solid fa-globe fa-2x"></i>
+                        <p class="text-3xl text-center">Please let us know where the e-mail is being moved to and from
+                        </p>
+                        <div class="flex flex-col justify-center items-center gap-4 h-full w-full">
+                            <div class="flex flex-col w-[300px] gap-2">
+                                <input id="host1" name="host1" class="text-white rounded-lg p-2 border-2" placeholder="Source" />
+                                <label for="host1" class="text-gray-500">Existing server, ie <i>mail.oldhost.co.uk</i>
+                                    or IP Adress</label>
+                            </div>
+                            <div class="flex flex-col w-[300px] mt-4 gap-2">
+                                <input id="host2" name="host2" class="text-white rounded-lg p-2 border-2" placeholder="Destination" />
+                                <label for="host2" class="text-gray-500">New server, ie
+                                    <i>mail.example-krystal-server.co.uk</i> or IP Adress</label>
+                            </div>
+                            <button type="button" id="next2" class="border-2 p-2 w-[100px] rounded-lg">Next</button>
+                        </div>
+                    </div>
+                </div>
 
-            <!-- Javascript buttons using xhr -->
-            <div class="row scripton">
-                <div class="padd0 btn-mar" >
-                    <button id="bt-sync" type="button"
-                    class="btn btn-lg center-block btn-block"
-                    tabindex="11"
-                    data-toggle="tooltip" data-placement="top"
-                    title="Launch the sync! You can stop the sync with the red Stop! button nearby or by closing the tab/window."
-                    >
-                    Sync or resync!<br>
-                    <span class="glyphicon glyphicon-envelope"></span>
-                    <span class="glyphicon glyphicon-arrow-right"></span>
-                    <span class="glyphicon glyphicon-envelope"></span>
-                </button>
+                <div id="tos-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <h2 class="text-lg mb-[8px]">Note:</h2>
+                        <p class="mb-[4px]">
+                            Using Gmail with oAuth2 authentication is not supported. Please see <a href="#" target="_blank"> documentation </a>  for more information
+                        </p>
+                        <button id="modal-btn-ok">Ok</button>
+                    </div>
+                </div>
+        
+               <div id="isSameMail" class="box flex flex-col m-0 p-0 rounded-lg border-4 h-[600px] w-[800px] hidden">
+                    <div class="first flex justify-start items-center">
+                        <div class="text-2xl pl-4 py-2 h-full">Start an e-mail migration</div>
+                    </div>
+                    <hr>
+        
+                    <div class="second flex flex-col justify-start items-center gap-4 m-4 h-full">
+                        <i class="fa-solid fa-envelope fa-2x"></i>
+                        <p class="text-3xl text-center">Does the <u>e-mail address</u> for the accounts on the new server match
+                            those
+                            on the old server?
+                        </p>
+                        <div class="flex flex-row justify-center items-start gap-4 h-full w-full">
+                            <div id="yesMail"
+                                class="cursor-pointer flex flex-col justify-start items-center gap-2 border-2 p-4 w-1/2 h-full rounded-lg">
+                                <i class="fa-solid fa-circle-check fa-2x icon-check"></i>
+                                <p class="text-3xl text-center underline">Same e-mails</p>
+                                <p class="text-2xl text-gray-300 text-center">It makes it easier if they're all the same</p>
+                            </div>
+                            <div id="noMail"
+                                class="cursor-pointer flex flex-col justify-start items-center gap-2 border-2 p-4 w-1/2 h-full rounded-lg">
+                                <i class="fa-solid fa-circle-xmark fa-2x icon-xmark"></i>
+                                <p class="text-3xl text-center underline">Different e-mails</p>
+                                <p class="text-2xl text-gray-300 text-center">Guess it's time for a change
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+               <div id="notSameMail" class="box flex flex-col m-0 p-0 rounded-lg border-4 h-[600px] w-[800px] hidden">
+                    <div class="first flex justify-start items-center">
+                        <div class="text-2xl pl-4 py-2 h-full">Start an e-mail migration</div>
+                    </div>
+                    <hr>
+        
+                    <div class="second flex flex-col justify-start items-center gap-4 m-4 h-full">
+                        <i class="fa-solid fa-envelope fa-2x"></i>
+                        <p class="text-3xl text-center">What is your new e-mail?
+                        </p>
+                        <div class="flex flex-row justify-center items-start gap-4 h-[200px] w-full">
+                            <div class="flex flex-col w-[300px] mt-20 gap-2">
+                                <input id="user2" class="text-white rounded-lg p-2 border-2"
+                                    placeholder="source@example.net" name="user2" />
+                                <label for="user2" class="text-gray-500">This is the destination mail</label>
+                            </div>
+                        </div>
+                        <button type="button" id="next3" class="border-2 p-2 w-[100px] rounded-lg mt-13">Next</button>
+                    </div>
+                </div>
+        
+               <div id="isSamePass" class="box flex flex-col m-0 p-0 rounded-lg border-4 h-[600px] w-[800px] hidden">
+                    <div class="first flex justify-start items-center">
+                        <div class="text-2xl pl-4 py-2 h-full">Start an e-mail migration</div>
+                    </div>
+                    <hr>
+        
+                    <div class="second flex flex-col justify-start items-center gap-4 m-4 h-full">
+                        <i class="fa-solid fa-key fa-2x"></i>
+                        <p class="text-3xl text-center">Do the <u>passwords</u> for the accounts on the new server match those
+                            on the old server?
+                        </p>
+                        <div class="flex flex-row justify-center items-start gap-4 h-full w-full">
+                            <div id="yesPass"
+                                class="cursor-pointer flex flex-col justify-start items-center gap-2 border-2 p-4 w-1/2 h-full rounded-lg">
+                                <i class="fa-solid fa-circle-check fa-2x icon-check"></i>
+                                <p class="text-3xl text-center underline">Same passwords</p>
+                                <p class="text-2xl text-gray-300 text-center">It makes it easier if they're all the same</p>
+                            </div>
+                            <div id="noPass"
+                                class="cursor-pointer flex flex-col justify-start items-center gap-2 border-2 p-4 w-1/2 h-full rounded-lg">
+                                <i class="fa-solid fa-circle-xmark fa-2x icon-xmark"></i>
+                                <p class="text-3xl text-center underline">Different passwords</p>
+                                <p class="text-2xl text-gray-300 text-center">Having different passwords could be more secure
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+               <div id="enterPass" class="box flex flex-col m-0 p-0 rounded-lg border-4 h-[600px] w-[800px] hidden">
+                    <div class="first flex justify-start items-center">
+                        <div class="text-2xl pl-4 py-2 h-full">Start an e-mail migration</div>
+                    </div>
+                    <hr>
+        
+                    <div class="second flex flex-col justify-start items-center gap-4 m-4 h-full">
+                        <i class="fa-solid fa-list fa-2x"></i>
+                        <p class="text-3xl text-center">Just the account details to go now...
+                        </p>
+        
+                        <div class="flex flex-col justify-center items-center gap-4 h-full w-full mt-[-25px]">
+                            <div class="flex flex-col w-[300px] gap-2">
+                                <input id="password1" name="password1" class="text-white rounded-lg p-2 border-2" placeholder="Source password"
+                                    type="password" />
+                                <label id="srcLabel" for="password1" class="text-gray-500">This is for source mail: PRIKAZI MAIL</label>
+                            </div>
+                            <div class="flex flex-col w-[300px] mt-4 gap-2">
+                                <input id="password2" name="password2" class="text-white rounded-lg p-2 border-2" placeholder="Destination password"
+                                    type="password" />
+                                <label id="destLabel" for="password2" class="text-gray-500">This is for destination mail: PRIKAZI MAIL</label>
+                            </div>
+                            <button type="button" id="next4" class="border-2 p-2 w-[100px] rounded-lg">Next</button>
+        
+                        </div>
+                    </div>
+                </div>
+        
+               <div id="confirmPage" class="box flex flex-col m-0 p-0 rounded-lg border-4 h-[600px] w-[800px] hidden">
+                    <div class="first flex justify-start items-center">
+                        <div class="text-2xl pl-4 py-2 h-full">Start an e-mail migration</div>
+                    </div>
+                    <hr>
+                    
+                    <div class="second flex flex-col justify-start items-center gap-4 m-4 h-[200px]">
+                        <i class="fa-solid fa-flag-checkered fa-2x"></i>
+                        <p class="text-3xl text-center">Confirm the details and start migration
+                        </p>
+                        
+                        <button id="bt-sync" class="border-2 p-2 w-[200px] h-[50px] rounded-lg mt-20">Begin migration</button>
+                        <div id="migrationText" class="text-center text-2xl text-gray-400 italic mt-15"> Migrating from SOURCE SERVER to DESTINATION
+                            SERVER
+                        </div>
+        
+                    </div>
+                    <div class="flex flex-col gap-4 justify-start ml-20 mb-0 mt-36">
+                        <div class="flex flex-row gap-4">
+                            <div class="text-2xl rounded-3xl flex justify-center items-center h-[25px] w-[70px] old-new">
+                                OLD</div>
+                            <p id="oldM">old mail</p>
+                        </div>
+                        <div class="flex flex-row gap-4">
+                            <div class="text-2xl rounded-3xl flex justify-center items-center h-[25px] w-[70px] old-new">
+                                NEW</div>
+                            <p id="newM">new mail</p>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="dry" name="dry" value="check">
+                            <label for="verbose">Verbose</label>
+                        </div>
+                    </div>
+                </div>
+                </form>
+                
+                <div id="consoleLogs" class="box flex flex-col items-center justify-center m-0 p-0 rounded-lg border-4 gap-4 p-4 hidden">
+                    <!-- PROGRESS BAR-->
+                    <div class="w-full bg-gray-200 rounded-full h-4">
+                        <div id="progress-bar-done" class="bg-green-500 h-4 rounded-full" style="width: 30%"></div>
+                    </div>
+                    <!-- PROGRESS BAR-->
+                    <div class="flex flex-row gap-2">
+                        <button class="border-2 p-2 w-[200px] h-[50px] rounded-lg" id="toggleConsole" type="button">Show
+                            consoles/logs</button>
+                        <button class="border-2 p-2 w-[200px] h-[50px] rounded-lg" id="bt-abort" type="button">Stop
+                            Sync</button>
+                    </div>
+        
+                    <div class="consoles flex flex-col justify-center items-center gap-4">
+                        <div id="consoleStop">
+                            <h2 class="text-center">Console of Stopping</h2>
+                            <div id="abort">
+                            </div>
+                        </div>
+                        <div id="consoleLaunch">
+                            <h2 class="text-center">Console of imapsync launch</h2>
+                            <div id="console"></div>
+        
+                        </div>
+                        <div id="log">
+                            <h2 id="imapsync_log_beginning" class="text-center scripton">Log of imapsync run</h2>
+                            <div id="output">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="congratsPage" class="flex flex-col justify-center items-center gap-4 m-16 hidden">
+                    <i class="fa-solid fa-trophy fa-4x text-yellow-500"></i>
+                    <h1 class="text-4xl text-center">Congratulations!</h1>
+                    <p class="text-2xl text-center">Your e-mail migration has been successfully completed.</p>
+                </div>
+
             </div>
-            <div class="padd0 btn-mar" >
-                <button id="bt-abort" type="button"
-                class="btn btn-lg center-block  btn-block" tabindex="12"
-                data-toggle="tooltip" data-placement="top"
-                title="Stop the sync! You can restart the sync later, no duplicates should happen."
-                >
-                Stop!<br>
-                <span class="glyphicon glyphicon-scissors"></span>
-            </button>
-            <pre id="progress-txt">ETA: Estimation Time of Arrival</pre>
-            </div>
-
-    <!-- <div class="row scripton" id="consoles" > -->
-
-
-        <!-- <div class="progress">
-            <div id="progress-bar-done" class="progress-bar progress-bar-success" role="progressbar">
-                Progress bar
-            </div>
-            <div id="progress-bar-left" class="progress-bar" role="progressbar">
-                Progress bar
-            </div>
-        </div>
-        </div> -->
-        <button class="custom-btn" id="toggleConsole" type="button">Toggle Console</button>
-    </div>
-    <!-- <button class="custom-btn" id="toggleLog" type="button">Toggle Log</button> -->
-    </form>
-    <div id="console-log" style="display:flex;gap:8px;align-items:center;justify-content:center;">
-        <div id="consoleStop" class="col-sm-6 ">
-            <h2 class="text-center">Console of Stopping</h2>
-            <div id="abort">
-            </div>
-        </div>
-        <div id="log">
-            <h2 id="imapsync_log_beginning" class="text-center scripton">Log of imapsync run</h2>
-            <div id="output" class="scripton">
-            </div>
-        </div>
-    </div>
-    </div>
-</div>
-<!-- <a id="bottom"></a> -->
+            
+            <footer>
+                <div class="text-center text-base mt-8">
+                    <!-- <a href="https://imapsync.lamiral.info/">
+                    <img alt="Imapsync home page" src="https://imapsync.lamiral.info/X/logo_imapsync_Xn.png" height="38" width="60">
+                    </a> -->
+                    <!-- <a href="#top" title="Top of the page" class="btn btn-info " role="button">Top</a> -->
+                    <!-- <a href="#buttons"  class="btn btn-info scripton" role="button">Consoles</a> -->
+                    <!-- <a href="#bottom" title="Bottom of the page" class="btn btn-info active" role="button">Bottom</a> -->
+                    Terms and conditions for anything: <a href="https://imapsync.lamiral.info/LICENSE">No limits to do anything with this work and this license!</a><br>
+                </div>
+            </footer>
 
 
-    <!-- <p class="text-center">Feel free to contact
-    <strong><a  href="https://imapsync.lamiral.info/#AUTHOR" target="_blank">Gilles LAMIRAL</a></strong>
-    </p> -->
 
-<!-- FOOTER -->
-<div class="container-fluid" >
-    <div class="row">
-        <div class="text-center">
-            <!-- <a href="https://imapsync.lamiral.info/">
-                <img alt="Imapsync home page" src="https://imapsync.lamiral.info/X/logo_imapsync_Xn.png" height="38" width="60">
-            </a> -->
-            <!-- <a href="#top" title="Top of the page" class="btn btn-info " role="button">Top</a> -->
-            <!-- <a href="#buttons"  class="btn btn-info scripton" role="button">Consoles</a> -->
-            <!-- <a href="#bottom" title="Bottom of the page" class="btn btn-info active" role="button">Bottom</a> -->
-            <br>
-        Terms and conditions for anything: <a href="https://imapsync.lamiral.info/LICENSE">No limits to do anything with this work and this license!</a><br>
-        </div>
-    </div>
-</div>
 
-<script
-src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"
-integrity="sha384-xBuQ/xzmlsLoJpyjoggmTEz8OWUFM0/RC5BsqQBDX2v5cMvDHcMakNTNrHIW2I5f"
-crossorigin="anonymous"
->
-</script>
 
-<script
-src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
-integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
-crossorigin="anonymous"
->
-</script>
-
-<!--
-<script src="crypto-js/core.js"></script>
-<script src="crypto-js/sha256.js"></script>
--->
-
-<script
-src="imapsync_form.js"
-type="text/javascript"
->
-</script>
-
-</body>
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"
+            integrity="sha384-xBuQ/xzmlsLoJpyjoggmTEz8OWUFM0/RC5BsqQBDX2v5cMvDHcMakNTNrHIW2I5f"
+            crossorigin="anonymous">
+            </script>
+            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+            <script src="imapsync_form.js" type="text/javascript" defer></script>
+        </body>
 </html>

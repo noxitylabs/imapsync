@@ -11,8 +11,6 @@
 
 $(document).ready(function () {
     "use strict";
-    // Bootstrap popover and tooltip
-    $("[data-toggle='tooltip']").tooltip();
 
     var readyStateStr = {
         0: "Request not initialized",
@@ -123,56 +121,135 @@ $(document).ready(function () {
 
     // Next buttons
     $("#next1").click(function () {
-        $("#account1").css({
-            display: "none",
+        var userInput = $("#user1").val();
+        $.ajax({
+            url: "http://localhost:8080/run-script",
+            type: "GET",
+            data: { user_input: userInput },
+            success: function (response) {
+                $("#host1").val(response);
+                $("#tos-modal").css({
+                    display: "flex"
+                });
+            },
         });
-        $("#parameters").css({
-            display: "block",
+        $("#start").css({
+            display: "none"
         });
-        $("#next1").css({
-            display: "none",
-        });
-        $("#next2").css({
-            display: "block",
+        $("#imapserver").css({
+            display: "flex"
         });
     });
-
     $("#next2").click(function () {
-        $("#parameters").css({
-            display: "none",
+        $("#imapserver").css({
+            display: "none"
         });
-        $("#account2").css({
-            display: "block",
+        $("#isSameMail").css({
+            display: "flex"
         });
-        $("#next2").css({
-            display: "none",
+        var src = $("#host1").val();
+        var dest = $("#host2").val();
+        $("#migrationText").text("Migrating from " + src + " to " + dest);
+
+    });
+
+    $("#yesMail").click(function() {
+        $("#isSameMail").css({
+            display: "none"
         });
-        $("#next3").css({
-            display: "block",
+        $("#isSamePass").css({
+            display: "flex"
+        });
+        $("#user2").val($("#user1").val());
+
+    });
+    var flag_isMailSame = true;
+    var flag_isPassSame = true;
+    $("#noMail").click(function() {
+        $("#isSameMail").css({
+            display: "none"
+        });
+        $("#notSameMail").css({
+            display: "flex"
+        });
+        flag_isMailSame = false;
+
+    });
+    $("#next3").click(function() {
+        $("#notSameMail").css({
+            display: "none"
+        });
+        $("#isSamePass").css({
+            display: "flex"
+        });
+        
+    });
+
+    $("#yesPass").click(function() {
+        flag_isPassSame = true;
+        $("#isSamePass").css({
+            display: "none"
+        });
+        $("#enterPass").css({
+            display: "flex"
+        });
+        $("#password2").css({
+            display: "none"
+        });
+        $("#destLabel").css({
+            display: "none"
+        });
+        $("#password2").prop("disabled", true);
+        $("#password2").val($("#password1").val());
+        $("#password1").on("input", function() {
+            $("#password2").val($(this).val());
+        });
+        var sourceInput = $("#user1").val();
+        $("#srcLabel").text("This is for source mail: " + sourceInput);
+        if(flag_isPassSame==true && flag_isMailSame==false) {
+            $("#srcLabel").text("This is for both mails.");
+        }
+
+    });
+
+    $("#noPass").click(function() {
+        $("#isSamePass").css({
+            display: "none"
+        });
+        $("#enterPass").css({
+            display: "flex"
+        });
+        $("#password2").css({
+            display: "inline-block"
+        });
+        $("#password2").prop("disabled", false);
+        $("#password2").val("");
+        $("#password1").off("input");
+        var sourceInput = $("#user1").val();
+        $("#srcLabel").text("This is for source mail: " + sourceInput);
+        var destInput = $("#user2").val();
+        $("#destLabel").text("This is for destination mail: " + destInput);
+    });
+
+    $("#next4").click(function() {
+        $("#enterPass").css({
+            display: "none"
+        });
+        $("#confirmPage").css({
+            display: "flex"
+        });
+        $("#oldM").text($("#user1").val());
+        $("#newM").text($("#user2").val());
+    });
+
+    $("#modal-btn-ok").click(function() {
+        $("#tos-modal").css({
+            display: "none"
         });
     });
 
-    $("#next3").click(function () {
-        $("#account2").css({
-            display: "none",
-        });
-        $("#startSync").css({
-            display: "block",
-        });
-        $("#next3").css({
-            display: "none",
-        });
-    });
 
-    // Toggle console and log
-
-    $("#toggleConsole").click(function () {
-        $("#consoleStop").toggle();
-        $("#log").toggle();
-    });
-    $("#toggleLog").click(function () {
-    });
-
+    
     var tests_last_eta = function tests_last_eta() {
         is("", last_eta(), "last_eta: no args => empty string");
 
@@ -316,18 +393,6 @@ $(document).ready(function () {
             $("#progress-bar-done")
                 .css("width", eta_obj.percent_done() + "%")
                 .attr("aria-valuenow", eta_obj.percent_done());
-            $("#progress-bar-left")
-                .css("width", eta_obj.percent_left() + "%")
-                .attr("aria-valuenow", eta_obj.percent_left());
-            $("#progress-bar-done").text(
-                eta_obj.percent_done() + "% " + "done"
-            );
-            $("#progress-bar-left").text(
-                eta_obj.percent_left() + "% " + "left"
-            );
-        } else {
-            $("#progress-bar-done").text("unknown % " + "done");
-            $("#progress-bar-left").text("unknown % " + "left");
         }
         return;
     };
@@ -567,10 +632,6 @@ $(document).ready(function () {
             store("#justfolders");
             store("#justfoldersizes");
 
-            localStorage.account1_background_color =
-                $("#account1").css("background-color");
-            localStorage.account2_background_color =
-                $("#account2").css("background-color");
         }
     };
 
@@ -603,22 +664,6 @@ $(document).ready(function () {
             retrieve("#justfolders");
             retrieve("#justfoldersizes");
 
-            // In case, how to restore the original color from css file.
-            // localStorage.removeItem( "account1_background_color" ) ;
-            // localStorage.removeItem( "account2_background_color" ) ;
-
-            if (localStorage.account1_background_color) {
-                $("#account1").css(
-                    "background-color",
-                    localStorage.account1_background_color
-                );
-            }
-            if (localStorage.account2_background_color) {
-                $("#account2").css(
-                    "background-color",
-                    localStorage.account2_background_color
-                );
-            }
 
             // Show the extra parameters if they are not empty because it would
             //  be dangerous to retrieve them without showing them
@@ -739,6 +784,12 @@ $(document).ready(function () {
         });
 
         $("#bt-sync").click(function () {
+            $("#confirmPage").css({
+                display: "none"
+            });
+            $("#consoleLogs").css({
+                display: "flex"
+            });
             $("#bt-sync").prop("disabled", true);
             $("#bt-abort").prop("disabled", false);
             $("#progress-txt").text("ETA: coming soon");

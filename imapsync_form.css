@@ -1,5 +1,3 @@
-/* $Id: imapsync_form.css,v 1.10 2021/09/21 09:25:53 gilles Exp gilles $ */
-
 :root {
     --pink: #e0819d;
     --white: #fcfcfc;
@@ -14,169 +12,63 @@
 body {
     color: white;
     background-color: var(--blue);
+    font-family: "Roboto Slab", sans-serif;
 }
 
-#account1,
-#account2,
-#parameters {
-    background-color: #9a032f;
-    /* border: 3px solid var(--pink); */
-    border-radius: 8px;
-    padding: 16px;
-    box-shadow: 0 0px 15px 0 black;
-    width: 400px;
-    min-height: 130px;
+.icon-check {
+    color: var(--green);
 }
-#parameters {
-    font-size: 2rem;
+.icon-xmark {
+    color: var(--red);
 }
 
-#progress-txt {
-    text-align: center;
-    font-size: 1.4em;
-    margin: 0 0 0px;
-    height: 50px;
-}
-
-#imapsync_log_bottom {
-    scroll-margin-top: 300px;
-}
-
-.progress {
-    /* text-align: center ; */
-    /* font-size: 1.4em ; */
-    margin: 0 0 0px;
-}
-
-.progress-bar {
-    text-align: center;
-    font-size: 1.4em;
-    margin: 0 0 0px;
-}
-
-.padd0 {
-    padding-left: 0px;
-    padding-right: 0px;
-}
-
-.custom-btn {
+input {
     background-color: var(--blue);
-    color: white;
-    border: 3px solid var(--white);
-    padding: 10px 20px;
-    border-radius: 4px;
-    text-decoration: none;
-    cursor: pointer;
-    display: inline-block;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
-    margin-top: 8px;
-    margin: 8px 4px 4px 0;
-    float: right;
 }
 
-.custom-btn:hover {
-    background-color: var(--red);
-}
-
-.custom-btn:focus {
-    outline: none;
-}
-
-.custom-btn:active {
-    background-color: var(--red);
-}
-
-#abort,
-#output {
-    height: 300px;
+.old-new {
+    color: var(--blue);
+    background-color: var(--white);
 }
 
 #consoleStop,
-#account2,
-#parameters,
-#startSync,
-#next2,
-#next3,
-#log {
-    display: none;
-}
-
-#bt-sync {
-    background-color: var(--green);
-}
-
-#bt-abort {
-    background-color: var(--red);
-}
-
-#bt-sync:hover,
-#bt-abort:hover {
-    color: #dbdbdb;
-}
-
-p,
-label {
-    font-size: 1.8rem;
-}
-
-form {
-    margin: 16px;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 16px;
-}
-#consoleStop,
+#consoleLaunch,
 #log {
     margin-bottom: 32px;
     background-color: var(--blue);
     color: white;
-    border: 3px solid var(--white);
-    width: 400px;
+    border: 1px solid var(--white);
+    width: 600px;
     height: 430px;
     overflow: auto;
 }
 
-a {
-    color: var(--red);
-}
-a:hover {
-    color: var(--pink);
-}
-
-#progress-text {
-    font-size: 1.4em;
-    margin: 1rem auto;
-    height: 50px;
-}
-
-.progress-bar {
-    width: 50%;
-    height: 3rem;
-    margin: 0 0 0px;
+.modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
 }
 
-pre {
-    background-color: transparent;
-    color: white;
-    border: none;
+.modal-content {
+    background: var(--blue);
+    padding: 20px;
+    width: 80%;
+    max-width: 600px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    text-align: center;
 }
 
-.btn-mar {
-    margin: 16px;
-}
-
-@media (max-width: 1000px) {
-    #console-log {
-        flex-direction: column;
-    }
-}
-#toggleConsole.custom-btn {
-    float: none;
-    display: block;
-    margin: 0 auto;
-    margin-bottom: 16px;
+#modal-btn-ok {
+    border: 2px solid;
+    border-radius: 5px;
+    padding: 5px 15px 5px 15px;
+    margin-top: 10px;
 }
