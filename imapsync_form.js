@@ -1,18 +1,90 @@
 // $Id: imapsync_form.js,v 1.34 2024/08/05 23:26:21 gilles Exp gilles $
 
-/*jslint browser: true*/ /*global  $*/
+/*jslint browser: true*/ /*global  $, Storage, XMLHttpRequest, document, localStorage, JSON, setInterval, clearInterval */
 
-/*
-1) How the hell is structured this code?
-2) What is its behavior?
+function last_x_lines(string, num) {
+    if (undefined === string || 0 === num) {
+        return "";
+    }
+    return string.split(/\r?\n/).slice(num).join("\n");
+}
 
+function last_eta(string) {
+    if (undefined === string) {
+        return "";
+    }
 
-*/
+    const eta_re = /ETA:[^\n]*\n/g;
+    const eta = string.match(eta_re);
+    if (eta) {
+        return eta[eta.length - 1];
+    }
+    return "ETA: unknown";
+}
+
+function decompose_eta_line(eta_str) {
+    const regex_eta =
+        /^ETA:\s+([^\n]+?)\s+(\d+)\s+s\s+(\d+)\/(\d+)\s+msgs\s+left\n?$/;
+    const eta_array = regex_eta.exec(eta_str);
+
+    if (eta_array === null) {
+        return {
+            str: "",
+            date: "?",
+            seconds_left: "?",
+            msgs_left: "?",
+            msgs_total: "?",
+            msgs_done: "?",
+            percent_done: function () { return ""; },
+            percent_left: function () { return ""; },
+        };
+    }
+
+    const eta_obj = {
+        str: eta_str,
+        date: eta_array[1],
+        seconds_left: eta_array[2],
+        msgs_left: eta_array[3],
+        msgs_total: eta_array[4],
+        msgs_done: function () {
+            const diff = eta_obj.msgs_total - eta_obj.msgs_left;
+            return diff.toString();
+        },
+        percent_done: function () {
+            if (0 === eta_obj.msgs_total) {
+                return "0";
+            }
+            const percent =
+                ((eta_obj.msgs_total - eta_obj.msgs_left) /
+                    eta_obj.msgs_total) *
+                100;
+            return percent.toFixed(2);
+        },
+        percent_left: function () {
+            if (0 === eta_obj.msgs_total) {
+                return "0";
+            }
+            const percent =
+                (eta_obj.msgs_left / eta_obj.msgs_total) * 100;
+            return percent.toFixed(2);
+        },
+    };
+    return eta_obj;
+}
+
+function showpassword(id, button) {
+    const x = document.getElementById(id);
+    if (button.checked) {
+        x.type = "text";
+    } else {
+        x.type = "password";
+    }
+}
 
 $(document).ready(function () {
     "use strict";
 
-    var readyStateStr = {
+    const readyStateStr = {
         0: "Request not initialized",
         1: "Server connection established",
         2: "Response headers received",
@@ -20,18 +92,18 @@ $(document).ready(function () {
         4: "Finished and response is ready",
     };
 
-    var refresh_interval_ms = 6000;
-    var refresh_interval_s = refresh_interval_ms / 1000;
-    var test = {
+    const refresh_interval_ms = 6000;
+    const refresh_interval_s = refresh_interval_ms / 1000;
+    const test = {
         counter_all: 0,
         counter_ok: 0,
         counter_nok: 0,
         failed_tests: "",
     };
 
-    var is = function is(expected, given, comment) {
+    const is = function is(expected, given, comment) {
         test.counter_all += 1;
-        var message =
+        let message =
             test.counter_all +
             " - [" +
             expected +
@@ -51,11 +123,7 @@ $(document).ready(function () {
         $("#tests").append(message);
     };
 
-    var note = function note(message) {
-        $("#tests").append(message);
-    };
-
-    var tests_last_x_lines = function tests_last_x_lines() {
+    const tests_last_x_lines = function tests_last_x_lines() {
         is("", last_x_lines(), "last_x_lines: no args => empty string");
         is("", last_x_lines(""), "last_x_lines: empty string => empty string");
         is("abc", last_x_lines("abc"), "last_x_lines: abc => abc");
@@ -91,37 +159,8 @@ $(document).ready(function () {
         );
     };
 
-    var last_x_lines = function last_x_lines(string, num) {
-        if (undefined === string || 0 === num) {
-            return "";
-        }
-        return string.split(/\r?\n/).slice(num).join("\n");
-    };
-
-    var last_eta = function last_eta(string) {
-        // return the last occurrence of the substring "ETA: ...\n"
-        // or "ETA: unknown" or ""
-        var eta;
-        var last_found;
-
-        if (undefined === string) {
-            return "";
-        }
-
-        var eta_re = /ETA:.*\n/g;
-
-        eta = string.match(eta_re);
-        if (eta) {
-            last_found = eta[eta.length - 1];
-            return last_found;
-        } else {
-            return "ETA: unknown";
-        }
-    };
-
-    // Next buttons
     $("#next1").click(function () {
-        var userInput = $("#user1").val();
+        const userInput = $("#user1").val();
         $.ajax({
             url: "http://localhost:8080/run-script",
             type: "GET",
@@ -140,6 +179,7 @@ $(document).ready(function () {
             display: "flex"
         });
     });
+
     $("#next2").click(function () {
         $("#imapserver").css({
             display: "none"
@@ -147,13 +187,12 @@ $(document).ready(function () {
         $("#isSameMail").css({
             display: "flex"
         });
-        var src = $("#host1").val();
-        var dest = $("#host2").val();
+        const src = $("#host1").val();
+        const dest = $("#host2").val();
         $("#migrationText").text("Migrating from " + src + " to " + dest);
-
     });
 
-    $("#yesMail").click(function() {
+    $("#yesMail").click(function () {
         $("#isSameMail").css({
             display: "none"
         });
@@ -161,11 +200,12 @@ $(document).ready(function () {
             display: "flex"
         });
         $("#user2").val($("#user1").val());
-
     });
-    var flag_isMailSame = true;
-    var flag_isPassSame = true;
-    $("#noMail").click(function() {
+
+    let flag_isMailSame = true;
+    let flag_isPassSame = true;
+
+    $("#noMail").click(function () {
         $("#isSameMail").css({
             display: "none"
         });
@@ -173,19 +213,18 @@ $(document).ready(function () {
             display: "flex"
         });
         flag_isMailSame = false;
-
     });
-    $("#next3").click(function() {
+
+    $("#next3").click(function () {
         $("#notSameMail").css({
             display: "none"
         });
         $("#isSamePass").css({
             display: "flex"
         });
-        
     });
 
-    $("#yesPass").click(function() {
+    $("#yesPass").click(function () {
         flag_isPassSame = true;
         $("#isSamePass").css({
             display: "none"
@@ -201,18 +240,17 @@ $(document).ready(function () {
         });
         $("#password2").prop("disabled", true);
         $("#password2").val($("#password1").val());
-        $("#password1").on("input", function() {
+        $("#password1").on("input", function () {
             $("#password2").val($(this).val());
         });
-        var sourceInput = $("#user1").val();
+        const sourceInput = $("#user1").val();
         $("#srcLabel").text("This is for source mail: " + sourceInput);
-        if(flag_isPassSame==true && flag_isMailSame==false) {
+        if (flag_isPassSame && !flag_isMailSame) {
             $("#srcLabel").text("This is for both mails.");
         }
-
     });
 
-    $("#noPass").click(function() {
+    $("#noPass").click(function () {
         $("#isSamePass").css({
             display: "none"
         });
@@ -225,13 +263,13 @@ $(document).ready(function () {
         $("#password2").prop("disabled", false);
         $("#password2").val("");
         $("#password1").off("input");
-        var sourceInput = $("#user1").val();
+        const sourceInput = $("#user1").val();
         $("#srcLabel").text("This is for source mail: " + sourceInput);
-        var destInput = $("#user2").val();
+        const destInput = $("#user2").val();
         $("#destLabel").text("This is for destination mail: " + destInput);
     });
 
-    $("#next4").click(function() {
+    $("#next4").click(function () {
         $("#enterPass").css({
             display: "none"
         });
@@ -242,15 +280,13 @@ $(document).ready(function () {
         $("#newM").text($("#user2").val());
     });
 
-    $("#modal-btn-ok").click(function() {
+    $("#modal-btn-ok").click(function () {
         $("#tos-modal").css({
             display: "none"
         });
     });
 
-
-    
-    var tests_last_eta = function tests_last_eta() {
+    const tests_last_eta = function tests_last_eta() {
         is("", last_eta(), "last_eta: no args => empty string");
 
         is("ETA: unknown", last_eta(""), "last_eta: empty => empty string");
@@ -276,12 +312,11 @@ $(document).ready(function () {
         );
     };
 
-    var tests_decompose_eta_line = function tests_decompose_eta_line() {
-        var eta_obj;
-        var eta_str =
+    const tests_decompose_eta_line = function tests_decompose_eta_line() {
+        const eta_str =
             "ETA: Wed Jul  3 14:55:27 2019  1234 s  123/4567 msgs left\n";
 
-        eta_obj = decompose_eta_line("");
+        let eta_obj = decompose_eta_line("");
         is("", eta_obj.str, "decompose_eta_line: no match => undefined");
 
         eta_obj = decompose_eta_line(eta_str);
@@ -308,100 +343,23 @@ $(document).ready(function () {
         is("2.69", eta_obj.percent_left(), "decompose_eta_line: percent_left");
     };
 
-    var decompose_eta_line = function decompose_eta_line(eta_str) {
-        var eta_obj;
-        var eta_array;
-
-        var regex_eta =
-            /^ETA:\s+(.*?)\s+([0-9]+)\s+s\s+([0-9]+)\/([0-9]+)\s+msgs\s+left\n?$/;
-        eta_array = regex_eta.exec(eta_str);
-
-        if (null !== eta_array) {
-            eta_obj = {
-                str: eta_str,
-                date: eta_array[1],
-                seconds_left: eta_array[2],
-                msgs_left: eta_array[3],
-                msgs_total: eta_array[4],
-                msgs_done: function () {
-                    var diff = eta_obj.msgs_total - eta_obj.msgs_left;
-                    return diff.toString();
-                },
-                percent_done: function () {
-                    var percent;
-                    if (0 === eta_obj.msgs_total) {
-                        return "0";
-                    } else {
-                        percent =
-                            ((eta_obj.msgs_total - eta_obj.msgs_left) /
-                                eta_obj.msgs_total) *
-                            100;
-                        return percent.toFixed(2);
-                    }
-                },
-                percent_left: function () {
-                    var percent;
-                    if (0 === eta_obj.msgs_total) {
-                        return "0";
-                    } else {
-                        percent =
-                            (eta_obj.msgs_left / eta_obj.msgs_total) * 100;
-                        return percent.toFixed(2);
-                    }
-                },
-            };
-        } else {
-            eta_obj = {
-                str: "",
-                date: "?",
-                seconds_left: "?",
-                msgs_left: "?",
-                msgs_total: "?",
-                msgs_done: "?",
-                percent_done: function () {
-                    return "";
-                },
-                percent_left: function () {
-                    return "";
-                },
-            };
-        }
-
-        return eta_obj;
+    const extract_eta = function extract_eta(xhr) {
+        const slice_length = xhr.readyState === 4 ? -24000 : -2400;
+        const slice_log = xhr.responseText.slice(slice_length);
+        const eta_str = last_eta(slice_log);
+        return decompose_eta_line(eta_str);
     };
 
-    var extract_eta = function extract_eta(xhr) {
-        var eta_obj;
-        var slice_length;
-        var slice_log;
-        var eta_str;
-
-        if (xhr.readyState === 4) {
-            slice_length = -24000;
-        } else {
-            slice_length = -2400;
-        }
-        slice_log = xhr.responseText.slice(slice_length);
-        eta_str = last_eta(slice_log);
-        // $("#tests").append( "extract_eta eta_str: " + eta_str + "\n" ) ;
-        eta_obj = decompose_eta_line(eta_str);
-        return eta_obj;
-    };
-
-    var progress_bar_update = function progress_bar_update(eta_obj) {
+    const progress_bar_update = function progress_bar_update(eta_obj) {
         if (eta_obj.str.length) {
             $("#progress-bar-done")
                 .css("width", eta_obj.percent_done() + "%")
                 .attr("aria-valuenow", eta_obj.percent_done());
         }
-        return;
     };
 
-    var refreshLog = function refreshLog(xhr) {
-        var eta_obj;
-        var eta_str;
-
-        eta_obj = extract_eta(xhr);
+    const refreshLog = function refreshLog(xhr) {
+        const eta_obj = extract_eta(xhr);
 
         progress_bar_update(eta_obj);
 
@@ -415,20 +373,19 @@ $(document).ready(function () {
 
             $("#output").text(xhr.responseText);
         } else {
-            eta_str =
+            let eta_str =
                 eta_obj.str +
                 " (refresh done every " +
                 refresh_interval_s +
                 " s)";
-            eta_str = eta_str.replace(/(\r\n|\n|\r)/gm, ""); // trim newlines
-            //$("#tests").append( "refreshLog  eta_str: " + eta_str + "\n" ) ;
+            eta_str = eta_str.replaceAll(/[\r\n]/g, "");
             $("#progress-txt").text(eta_str);
-            var last_lines = last_x_lines(xhr.responseText.slice(-2000), -10);
+            const last_lines = last_x_lines(xhr.responseText.slice(-2000), -10);
             $("#output").text(last_lines);
         }
     };
 
-    var handleRun = function handleRun(xhr, timerRefreshLog) {
+    const handleRun = function handleRun(xhr, timerRefreshLog) {
         $("#console").text(
             "Status: " +
                 xhr.status +
@@ -441,19 +398,15 @@ $(document).ready(function () {
         );
 
         if (xhr.readyState === 4) {
-            // var headers = xhr.getAllResponseHeaders();
-            // $("#console").append(headers);
-            // $("#console").append("See the completed log\n");
             clearInterval(timerRefreshLog);
             refreshLog(xhr); // a last time
-            // back to enable state for next run
             $("#bt-sync").prop("disabled", false);
         }
     };
 
-    var imapsync = function imapsync() {
-        var querystring = $("#form").serialize();
-        $("#abort").text("\n\n"); // clean abort console
+    const imapsync = function imapsync() {
+        let querystring = $("#form").serialize();
+        $("#abort").text("\n\n");
         $("#output").text("Here comes the log!\n\n");
 
         if ("imap.gmail.com" === $("#host1").val()) {
@@ -463,7 +416,6 @@ $(document).ready(function () {
             querystring = querystring + "&gmail2=on";
         }
 
-        // Same for "outlook.office365.com"
         if ("outlook.office365.com" === $("#host1").val()) {
             querystring = querystring + "&office1=on";
         }
@@ -471,11 +423,8 @@ $(document).ready(function () {
             querystring = querystring + "&office2=on";
         }
 
-        // querystring = querystring + "&tmphash=" + tmphash(  ) ;
-
-        var xhr;
-        xhr = new XMLHttpRequest();
-        var timerRefreshLog = setInterval(function () {
+        const xhr = new XMLHttpRequest();
+        const timerRefreshLog = setInterval(function () {
             refreshLog(xhr);
         }, refresh_interval_ms);
 
@@ -491,7 +440,7 @@ $(document).ready(function () {
         xhr.send(querystring);
     };
 
-    var handleAbort = function handleAbort(xhr) {
+    const handleAbort = function handleAbort(xhr) {
         $("#abort").text(
             "Status: " +
                 xhr.status +
@@ -506,14 +455,13 @@ $(document).ready(function () {
         if (xhr.readyState === 4) {
             $("#abort").append(xhr.responseText);
             $("#bt-sync").prop("disabled", false);
-            $("#bt-abort").prop("disabled", false); // back for next abort
+            $("#bt-abort").prop("disabled", false);
         }
     };
 
-    var abort = function abort() {
-        var querystring = $("#form").serialize() + "&abort=on";
-        var xhr;
-        xhr = new XMLHttpRequest();
+    const abort = function abort() {
+        const querystring = $("#form").serialize() + "&abort=on";
+        const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function () {
             handleAbort(xhr);
         };
@@ -525,9 +473,8 @@ $(document).ready(function () {
         xhr.send(querystring);
     };
 
-    var store = function store(id) {
-        var stored;
-        //$( "#tests" ).append( "Eco: " + id + " type is " + $( id ).attr( "type" ) + "\n" ) ;
+    const store = function store(id) {
+        let stored;
         if (
             "text" === $(id).attr("type") ||
             "password" === $(id).attr("type")
@@ -535,16 +482,14 @@ $(document).ready(function () {
             localStorage.setItem(id, $(id).val());
             stored = $(id).val();
         } else if ("checkbox" === $(id).attr("type")) {
-            //$( "#tests" ).append( "Eco: " + id + " checked is " + $( id )[0].checked + "\n" ) ;
             localStorage.setItem(id, $(id)[0].checked);
             stored = $(id)[0].checked;
         }
         return stored;
     };
 
-    var retrieve = function retrieve(id) {
-        var retrieved;
-        //$( "#tests" ).append( "Eco: " + id + " type is " + $( id ).attr( "type" ) + " length is " + $( id ).length + "\n" ) ;
+    const retrieve = function retrieve(id) {
+        let retrieved;
         if (
             "text" === $(id).attr("type") ||
             "password" === $(id).attr("type")
@@ -552,17 +497,15 @@ $(document).ready(function () {
             $(id).val(localStorage.getItem(id));
             retrieved = $(id).val();
         } else if ("checkbox" === $(id).attr("type")) {
-            //$( "#tests" ).append( "Eco: " + id + " getItem is " + localStorage.getItem( id ) + "\n" ) ;
             $(id)[0].checked = JSON.parse(localStorage.getItem(id));
             retrieved = $(id)[0].checked;
         }
         return retrieved;
     };
 
-    var tests_store_retrieve = function tests_store_retrieve() {
+    const tests_store_retrieve = function tests_store_retrieve() {
         if ($("#tests").length !== 0) {
             is(1, 1, "one equals one");
-            // isnot( 0, 1, "zero differs one" ) ;
 
             // no exist
             is(undefined, store("#test_noexists"), "store: #test_noexists");
@@ -612,9 +555,8 @@ $(document).ready(function () {
         }
     };
 
-    var store_form = function store_form() {
-        if (Storage !== "undefined") {
-            // Code for localStorage.
+    const store_form = function store_form() {
+        if (typeof Storage !== "undefined") {
             store("#user1");
             store("#password1");
             store("#host1");
@@ -631,11 +573,10 @@ $(document).ready(function () {
             store("#justlogin");
             store("#justfolders");
             store("#justfoldersizes");
-
         }
     };
 
-    var show_extra_if_needed = function show_extra_if_needed() {
+    const show_extra_if_needed = function show_extra_if_needed() {
         if ($("#subfolder1").length && $("#subfolder1").val().length > 0) {
             $(".extra_param").show();
         }
@@ -644,18 +585,15 @@ $(document).ready(function () {
         }
     };
 
-    var retrieve_form = function retrieve_form() {
-        if (Storage !== "undefined") {
-            // Code for localStorage.
+    const retrieve_form = function retrieve_form() {
+        if (typeof Storage !== "undefined") {
             retrieve("#user1");
             retrieve("#password1");
-            // retrieve("#showpassword1") ;
             retrieve("#host1");
             retrieve("#subfolder1");
 
             retrieve("#user2");
             retrieve("#password2");
-            // retrieve("#showpassword2") ;
             retrieve("#host2");
             retrieve("#subfolder2");
 
@@ -664,108 +602,13 @@ $(document).ready(function () {
             retrieve("#justfolders");
             retrieve("#justfoldersizes");
 
-
             // Show the extra parameters if they are not empty because it would
             //  be dangerous to retrieve them without showing them
             show_extra_if_needed();
         }
     };
 
-    var showpassword = function showpassword(id, button) {
-        var x = document.getElementById(id);
-        if (button.checked) {
-            x.type = "text";
-        } else {
-            x.type = "password";
-        }
-    };
-
-    var tests_cryptojs = function tests_cryptojs() {
-        if ($("#tests").length !== 0) {
-            if (typeof CryptoJS === "undefined") {
-                is(
-                    true,
-                    typeof CryptoJS !== "undefined",
-                    "CryptoJS is available"
-                );
-                note(
-                    "CryptoJS is not available on this site. Ask the admin to fix this.\n"
-                );
-            } else if (typeof CryptoJS.SHA256 !== "function") {
-                is(
-                    "function",
-                    typeof CryptoJS.SHA256,
-                    "CryptoJS.SHA256 is a function"
-                );
-                note(
-                    "CryptoJS.SHA256 function is not available on this site. Ask the admin to fix this.\n"
-                );
-            } else {
-                // safe to use the function
-                is(
-                    "function",
-                    typeof CryptoJS.SHA256,
-                    "CryptoJS.SHA256 is a function"
-                );
-                is(
-                    "2f77668a9dfbf8d5848b9eeb4a7145ca94c6ed9236e4a773f6dcafa5132b2f91",
-                    sha256("Message"),
-                    "sha256 Message"
-                );
-                is(
-                    "26429a356b1d25b7d57c0f9a6d5fed8a290cb42374185887dcd2874548df0779",
-                    sha256("caca"),
-                    "sha256 caca"
-                );
-                is(
-                    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                    sha256(""),
-                    "sha256 ''"
-                );
-                is(tmphash(), tmphash(), "tmphash");
-
-                $("#user1").val("test1");
-                $("#password1").val("secret1");
-                $("#host1").val("test1.lamiral.info");
-                $("#user2").val("test2");
-                $("#password2").val("secret2");
-                $("#host2").val("test2.lamiral.info");
-                is(
-                    "20d2b4917cf69114876b4c8779af543e89c5871c6ada68107619722e55af1101",
-                    tmphash(),
-                    "tmphash like testslive"
-                );
-                $("#user1").val("");
-                $("#password1").val("");
-                $("#host1").val("");
-                $("#user2").val("");
-                $("#password2").val("");
-                $("#host2").val("");
-            }
-        }
-    };
-
-    var sha256 = function sha256(string) {
-        var hash = CryptoJS.SHA256(string);
-        var hash_hex = hash.toString(CryptoJS.enc.Hex);
-        return hash_hex;
-    };
-
-    var tmphash = function tmphash() {
-        var string = "";
-        string = string.concat(
-            $("#user1").val(),
-            $("#password1").val(),
-            $("#host1").val(),
-            $("#user2").val(),
-            $("#password2").val(),
-            $("#host2").val()
-        );
-        return sha256(string);
-    };
-
-    var init = function init() {
-        // in case of a manual refresh, start with
+    const init = function init() {
         $("#bt-sync").prop("disabled", false);
         $("#bt-abort").prop("disabled", false);
         $("#progress-bar-left")
@@ -773,13 +616,12 @@ $(document).ready(function () {
             .attr("aria-valuenow", 100);
 
         $("#showpassword1").click(function (event) {
-            var button = event.target;
+            const button = event.target;
             showpassword("password1", button);
         });
 
         $("#showpassword2").click(function (event) {
-            //$("#tests").append( "\nthat1=" + JSON.stringify( event.target, undefined, 4 ) ) ;
-            var button = event.target;
+            const button = event.target;
             showpassword("password2", button);
         });
 
@@ -803,16 +645,16 @@ $(document).ready(function () {
             abort();
         });
 
-        var swap = function swap(p1, p2) {
-            var temp = $(p2).val();
+        const swap = function swap(p1, p2) {
+            const temp = $(p2).val();
             $(p2).val($(p1).val());
             $(p1).val(temp);
         };
 
         $("#swap").click(function () {
             // swaping colors can't use swap()
-            var temp1 = $("#account1").css("background-color");
-            var temp2 = $("#account2").css("background-color");
+            const temp1 = $("#account1").css("background-color");
+            const temp2 = $("#account2").css("background-color");
             $("#account1").css("background-color", temp2);
             $("#account2").css("background-color", temp1);
 
@@ -821,7 +663,7 @@ $(document).ready(function () {
             swap($("#host1"), $("#host2"));
             swap($("#subfolder1"), $("#subfolder2"));
 
-            var temp = $("#showpassword1")[0].checked;
+            const temp = $("#showpassword1")[0].checked;
             $("#showpassword1")[0].checked = $("#showpassword2")[0].checked;
             $("#showpassword2")[0].checked = temp;
             showpassword("password1", $("#showpassword1")[0]);
@@ -829,16 +671,12 @@ $(document).ready(function () {
         });
     };
 
-    var tests_bilan = function tests_bilan(nb_attended_test) {
-        // attended number of tests: nb_attended_test
-
+    const tests_bilan = function tests_bilan(nb_attended_test) {
         $("#tests").append("1.." + test.counter_all + "\n");
         if (test.counter_nok > 0) {
             $("#tests").append("\nFAILED tests \n" + test.failed_tests);
             $("#tests").collapse("show");
         }
-        // Summary of tests: failed 0 tests, run xx tests,
-        // expected to run yy tests.
         if (test.counter_all !== nb_attended_test) {
             $("#tests").append(
                 "# Looks like you planned " +
@@ -851,23 +689,14 @@ $(document).ready(function () {
         }
     };
 
-    var tests = function tests(nb_attended_test) {
+    const tests = function tests(nb_attended_test) {
         if ($("#tests").length !== 0) {
             tests_store_retrieve();
             tests_last_eta();
             tests_decompose_eta_line();
             tests_last_x_lines();
-            // tests_cryptojs(  ) ;
-
-            // The following test can be used to check that if a test fails
-            // then all the tests are shown to the user.
-            //is( 0, 1, "this test always fails" ) ;
 
             tests_bilan(nb_attended_test);
-
-            // If you want to always see the tests, uncomment the following
-            // line
-            //$("#tests").collapse("show") ;
         }
     };
 

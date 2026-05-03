@@ -12,7 +12,9 @@ mx_host_lower=$(echo "$mx_host" | tr '[:upper:]' '[:lower:]')
 imap_srv=$(dig +short _imaps._tcp."$domain" SRV | awk '{print $4}' | sed 's/\.$//')
 
 print_result() {
-    echo $1;
+    local host="$1"
+    echo "$host"
+    return 0
 }
 
 # Check known providers
