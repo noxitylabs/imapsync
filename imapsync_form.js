@@ -51,7 +51,7 @@ function decompose_eta_line(eta_str) {
             return diff.toString();
         },
         percent_done: function () {
-            if (0 === eta_obj.msgs_total) {
+            if (Number(eta_obj.msgs_total) === 0) {
                 return "0";
             }
             const percent =
@@ -61,7 +61,7 @@ function decompose_eta_line(eta_str) {
             return percent.toFixed(2);
         },
         percent_left: function () {
-            if (0 === eta_obj.msgs_total) {
+            if (Number(eta_obj.msgs_total) === 0) {
                 return "0";
             }
             const percent =
@@ -79,6 +79,13 @@ function showpassword(id, button) {
     } else {
         x.type = "password";
     }
+}
+
+function extract_eta(xhr) {
+    const slice_length = xhr.readyState === 4 ? -24000 : -2400;
+    const slice_log = xhr.responseText.slice(slice_length);
+    const eta_str = last_eta(slice_log);
+    return decompose_eta_line(eta_str);
 }
 
 $(document).ready(function () {
@@ -341,13 +348,6 @@ $(document).ready(function () {
         is("97.31", eta_obj.percent_done(), "decompose_eta_line: percent_done");
 
         is("2.69", eta_obj.percent_left(), "decompose_eta_line: percent_left");
-    };
-
-    const extract_eta = function extract_eta(xhr) {
-        const slice_length = xhr.readyState === 4 ? -24000 : -2400;
-        const slice_log = xhr.responseText.slice(slice_length);
-        const eta_str = last_eta(slice_log);
-        return decompose_eta_line(eta_str);
     };
 
     const progress_bar_update = function progress_bar_update(eta_obj) {
