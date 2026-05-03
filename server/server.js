@@ -1,8 +1,12 @@
 const express = require("express");
 const cors = require("cors");
-const { exec } = require("child_process");
+const path = require("path");
+const { execFile } = require("child_process");
 const app = express();
 const port = 8080;
+
+const DOMAIN_RE = /^(?=.{1,253}$)(?!-)[A-Za-z0-9-]{1,63}(?<!-)(?:\.(?!-)[A-Za-z0-9-]{1,63}(?<!-))+$/;
+const SCRIPT_PATH = path.join(__dirname, "script.sh");
 
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
@@ -13,9 +17,11 @@ app.get("/run-script", (req, res) => {
         return res.status(400).send("No user_input parameter provided.");
     }
 
-    const scriptPath = "./script.sh";
+    if (typeof userInput !== "string" || !DOMAIN_RE.test(userInput)) {
+        return res.status(400).send("Invalid domain.");
+    }
 
-    exec(`bash ${scriptPath} ${userInput}`, (error, stdout, stderr) => {
+    execFile("bash", [SCRIPT_PATH, userInput], { timeout: 15000 }, (error, stdout, stderr) => {
         if (error) {
             console.error(`Error executing script: ${error}`);
             return res
