@@ -19,8 +19,7 @@
    ============================================================= */
 
 window.NOXITY_DEST_IPS = [
-    // "203.0.113.10",
-    // "203.0.113.11",
+    "2.58.59.26",
 ];
 
 /* Optional: support contact shown on every provider/error modal.
