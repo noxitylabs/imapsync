@@ -169,7 +169,6 @@ body > header p strong { color: var(--nox-ink); font-weight: 600; }
     width: 800px !important;
     max-width: 100%;
     height: auto !important;
-    min-height: 540px;
     padding: 0 !important;
     margin: 0 auto 24px !important;
 }
@@ -734,30 +733,6 @@ label[for="verbose"], label[for="dry"] {
 }
 
 /* =============================================================
-   Footer
-   ============================================================= */
-
-footer {
-    border-top: 1px solid var(--nox-line);
-    margin-top: 64px;
-    padding: 32px 24px 48px;
-}
-
-footer .text-center {
-    font-family: var(--nox-sans);
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--nox-ink-mute) !important;
-    max-width: 720px;
-    margin: 0 auto !important;
-}
-
-footer a {
-    color: var(--nox-crimson);
-    font-weight: 600;
-}
-
-/* =============================================================
    Responsive
    ============================================================= */
 
@@ -765,7 +740,6 @@ footer a {
     body > header { padding: 56px 20px 40px; }
     .box {
         width: 100% !important;
-        min-height: 0;
     }
     .box .second { padding: 40px 24px 32px !important; }
     #consoleStop, #consoleLaunch, #log { width: 100% !important; height: 280px !important; }

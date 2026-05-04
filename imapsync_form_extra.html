@@ -35,14 +35,14 @@
                         <p class="text-3xl text-center">What is your current e-mail?
                         </p>
                         
-                        <div class="flex flex-row justify-center items-start gap-4 h-[200px] w-full">
-                            <div class="flex flex-col w-[300px] mt-20 gap-2">
+                        <div class="flex flex-row justify-center items-start gap-4 w-full">
+                            <div class="flex flex-col w-[300px] gap-2">
                                 <input id="user1" class="text-white rounded-lg p-2 border-2"
                                     placeholder="source@example.net" name="user1" />
                                 <label for="user1" class="text-gray-500">This is the source mail</label>
                             </div>
                         </div>
-                        <button type="button" id="next1" class="border-2 p-2 w-[100px] rounded-lg mt-13">Next</button>
+                        <button type="button" id="next1" class="border-2 p-2 w-[100px] rounded-lg">Next</button>
                         
                     </div>
                 </div>
@@ -126,14 +126,14 @@
                         <i class="fa-solid fa-envelope fa-2x"></i>
                         <p class="text-3xl text-center">What is your new e-mail?
                         </p>
-                        <div class="flex flex-row justify-center items-start gap-4 h-[200px] w-full">
-                            <div class="flex flex-col w-[300px] mt-20 gap-2">
+                        <div class="flex flex-row justify-center items-start gap-4 w-full">
+                            <div class="flex flex-col w-[300px] gap-2">
                                 <input id="user2" class="text-white rounded-lg p-2 border-2"
                                     placeholder="source@example.net" name="user2" />
                                 <label for="user2" class="text-gray-500">This is the destination mail</label>
                             </div>
                         </div>
-                        <button type="button" id="next3" class="border-2 p-2 w-[100px] rounded-lg mt-13">Next</button>
+                        <button type="button" id="next3" class="border-2 p-2 w-[100px] rounded-lg">Next</button>
                     </div>
                 </div>
         
@@ -177,7 +177,7 @@
                         <p class="text-3xl text-center">Just the account details to go now...
                         </p>
         
-                        <div class="flex flex-col justify-center items-center gap-4 h-full w-full mt-[-25px]">
+                        <div class="flex flex-col justify-center items-center gap-4 w-full">
                             <div class="flex flex-col w-[300px] gap-2">
                                 <input id="password1" name="password1" class="text-white rounded-lg p-2 border-2" placeholder="Source password"
                                     type="password" />
@@ -200,18 +200,18 @@
                     </div>
                     <hr>
                     
-                    <div class="second flex flex-col justify-start items-center gap-4 m-4 h-[200px]">
+                    <div class="second flex flex-col justify-start items-center gap-4 m-4">
                         <i class="fa-solid fa-flag-checkered fa-2x"></i>
                         <p class="text-3xl text-center">Confirm the details and start migration
                         </p>
-                        
-                        <button type="button" id="bt-sync" class="border-2 p-2 w-[200px] h-[50px] rounded-lg mt-20">Begin migration</button>
-                        <div id="migrationText" class="text-center text-2xl text-gray-400 italic mt-15"> Migrating from SOURCE SERVER to DESTINATION
+
+                        <button type="button" id="bt-sync" class="border-2 p-2 w-[200px] h-[50px] rounded-lg">Begin migration</button>
+                        <div id="migrationText" class="text-center text-2xl text-gray-400 italic"> Migrating from SOURCE SERVER to DESTINATION
                             SERVER
                         </div>
-        
+
                     </div>
-                    <div class="flex flex-col gap-4 justify-start ml-20 mb-0 mt-36">
+                    <div class="flex flex-col gap-4 justify-start ml-20 mb-8 mt-4">
                         <div class="flex flex-row gap-4">
                             <div class="text-2xl rounded-3xl flex justify-center items-center h-[25px] w-[70px] old-new">
                                 OLD</div>
@@ -269,15 +269,6 @@
                 </div>
 
             </div>
-            
-            <footer>
-                <div class="text-center text-base mt-8">
-                    Terms and conditions for anything: <a href="https://imapsync.lamiral.info/LICENSE">No limits to do anything with this work and this license!</a><br>
-                </div>
-            </footer>
-
-
-
 
 
             <script src="https://code.jquery.com/jquery-3.6.0.min.js"
