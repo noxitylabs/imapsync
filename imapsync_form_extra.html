@@ -75,11 +75,14 @@
 
                 <div id="tos-modal" class="modal hidden">
                     <div class="modal-content">
-                        <h2 class="text-lg mb-[8px]">Note:</h2>
-                        <p class="mb-[4px]">
-                            Using Gmail with oAuth2 authentication is not supported. Please see <a href="#" target="_blank"> documentation </a>  for more information
-                        </p>
-                        <button id="modal-btn-ok">Ok</button>
+                        <h2 id="modal-title">Heads up</h2>
+                        <p id="modal-body"></p>
+                        <ol id="modal-steps" class="modal-steps"></ol>
+                        <div class="modal-actions">
+                            <a id="modal-guide" href="#" target="_blank" rel="noopener" class="modal-link">Open guide</a>
+                            <a id="modal-support" href="mailto:support@noxity.io" class="modal-link modal-link-muted">Contact support</a>
+                        </div>
+                        <button id="modal-btn-ok">OK</button>
                     </div>
                 </div>
         
@@ -280,6 +283,7 @@
             <script src="https://code.jquery.com/jquery-3.6.0.min.js"
                     integrity="sha384-vtXRMe3mGCbOeY7l30aIg8H9p3GdeSe4IFlP6G8JMa7o7lXvnz3GFKzPxzJdPfGK"
                     crossorigin="anonymous"></script>
+            <script src="noxity-ips.js" type="text/javascript"></script>
             <script src="imapsync_form.js" type="text/javascript" defer></script>
         </body>
 </html>

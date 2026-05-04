@@ -562,11 +562,11 @@ body > header p strong { color: var(--nox-ink); font-weight: 600; }
     color: var(--nox-ink) !important;
     border: 1px solid var(--nox-line) !important;
     border-radius: var(--nox-radius-xl) !important;
-    padding: 36px 32px !important;
-    max-width: 480px !important;
-    width: 90%;
+    padding: 36px 36px 32px !important;
+    max-width: 540px !important;
+    width: 92%;
     box-shadow: 0 20px 60px rgba(35,55,90,0.30);
-    text-align: center;
+    text-align: left;
 }
 
 .modal-content h2 {
@@ -575,22 +575,68 @@ body > header p strong { color: var(--nox-ink); font-weight: 600; }
     font-weight: 700;
     color: var(--nox-ink);
     letter-spacing: -0.02em;
-    margin: 0 0 12px !important;
+    margin: 0 0 10px !important;
+    line-height: 1.2;
 }
 
 .modal-content p {
     font-family: var(--nox-sans);
-    font-size: 14px;
-    line-height: 1.6;
+    font-size: 15px;
+    line-height: 1.55;
     color: var(--nox-ink-2);
-    margin: 0 0 20px !important;
+    margin: 0 0 18px !important;
 }
 
-.modal-content a {
+.modal-steps {
+    list-style: decimal;
+    margin: 0 0 22px !important;
+    padding: 0 0 0 22px !important;
+    color: var(--nox-ink-2);
+    font-size: 14px;
+    line-height: 1.55;
+    counter-reset: nox-step;
+}
+.modal-steps li {
+    margin: 0 0 8px;
+    padding-left: 4px;
+}
+.modal-steps li::marker {
     color: var(--nox-crimson);
+    font-family: var(--nox-mono);
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.modal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    margin: 0 0 24px;
+}
+
+.modal-content a,
+.modal-link {
+    color: var(--nox-crimson);
+    font-family: var(--nox-sans);
+    font-size: 13px;
     font-weight: 600;
     text-decoration: underline;
     text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+}
+.modal-content a:hover,
+.modal-link:hover { color: var(--nox-crimson-hover); }
+
+.modal-link-muted {
+    color: var(--nox-ink-2) !important;
+    font-weight: 500 !important;
+    text-decoration-color: var(--nox-line-strong) !important;
+}
+.modal-link-muted:hover { color: var(--nox-ink) !important; }
+
+.modal-content #modal-btn-ok {
+    margin-top: 4px !important;
+    width: 100%;
 }
 
 /* =============================================================

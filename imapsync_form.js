@@ -99,6 +99,235 @@ $(document).ready(function () {
         4: "Finished and response is ready",
     };
 
+    /* ===== DNS-over-HTTPS provider detection ============================ */
+
+    const DOH_URL = "https://cloudflare-dns.com/dns-query";
+    const IPV4_RE = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
+
+    async function doh(name, type) {
+        try {
+            const res = await fetch(
+                DOH_URL + "?name=" + encodeURIComponent(name) + "&type=" + type,
+                { headers: { Accept: "application/dns-json" } }
+            );
+            if (!res.ok) return [];
+            const json = await res.json();
+            return Array.isArray(json.Answer) ? json.Answer : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    const stripDot = function (s) { return s.replace(/\.$/, ""); };
+
+    const MX_PROVIDERS = [
+        { suffix: "google.com",             host: "imap.gmail.com",        kind: "google" },
+        { suffix: "googlemail.com",         host: "imap.gmail.com",        kind: "google" },
+        { suffix: "outlook.com",            host: "outlook.office365.com", kind: "microsoft" },
+        { suffix: "office365.com",          host: "outlook.office365.com", kind: "microsoft" },
+        { suffix: "protection.outlook.com", host: "outlook.office365.com", kind: "microsoft" },
+        { suffix: "hotmail.com",            host: "outlook.office365.com", kind: "microsoft" },
+        { suffix: "live.com",               host: "outlook.office365.com", kind: "microsoft" },
+        { suffix: "yahoodns.net",           host: "imap.mail.yahoo.com",   kind: "yahoo" },
+        { suffix: "yahoo.com",              host: "imap.mail.yahoo.com",   kind: "yahoo" },
+        { suffix: "icloud.com",             host: "imap.mail.me.com",      kind: "icloud" },
+        { suffix: "mail.me.com",            host: "imap.mail.me.com",      kind: "icloud" },
+        { suffix: "apple.com",              host: "imap.mail.me.com",      kind: "icloud" },
+    ];
+
+    const CONSUMER_DOMAINS = {
+        "gmail.com":       { host: "imap.gmail.com",        kind: "gmail" },
+        "googlemail.com":  { host: "imap.gmail.com",        kind: "gmail" },
+        "outlook.com":     { host: "outlook.office365.com", kind: "outlook_consumer" },
+        "hotmail.com":     { host: "outlook.office365.com", kind: "outlook_consumer" },
+        "live.com":        { host: "outlook.office365.com", kind: "outlook_consumer" },
+        "msn.com":         { host: "outlook.office365.com", kind: "outlook_consumer" },
+        "yahoo.com":       { host: "imap.mail.yahoo.com",   kind: "yahoo" },
+        "yahoo.co.uk":     { host: "imap.mail.yahoo.com",   kind: "yahoo" },
+        "ymail.com":       { host: "imap.mail.yahoo.com",   kind: "yahoo" },
+        "icloud.com":      { host: "imap.mail.me.com",      kind: "icloud" },
+        "me.com":          { host: "imap.mail.me.com",      kind: "icloud" },
+        "mac.com":         { host: "imap.mail.me.com",      kind: "icloud" },
+    };
+
+    async function detectProvider(domain) {
+        domain = (domain || "").toLowerCase();
+        if (!domain) return { host: "", kind: "custom" };
+
+        if (CONSUMER_DOMAINS[domain]) {
+            return CONSUMER_DOMAINS[domain];
+        }
+
+        const mxRecords = await doh(domain, "MX");
+        if (mxRecords.length) {
+            mxRecords.sort(function (a, b) {
+                return parseInt(a.data, 10) - parseInt(b.data, 10);
+            });
+            const parts = mxRecords[0].data.split(/\s+/);
+            const mxHost = stripDot(parts[parts.length - 1] || "").toLowerCase();
+            for (const p of MX_PROVIDERS) {
+                if (mxHost.endsWith(p.suffix)) {
+                    let kind = p.kind;
+                    if (kind === "google")    kind = "google_workspace";
+                    if (kind === "microsoft") kind = "microsoft365";
+                    return { host: p.host, kind: kind };
+                }
+            }
+        }
+
+        const subs = ["imap", "mail"];
+        for (const sub of subs) {
+            const fqdn = sub + "." + domain;
+            const a = await doh(fqdn, "A");
+            if (a.some(function (r) { return r.type === 1; })) {
+                return { host: fqdn, kind: "custom" };
+            }
+        }
+
+        return { host: "", kind: "custom" };
+    }
+
+    async function resolveAllIPs(host) {
+        host = (host || "").trim();
+        if (!host) return [];
+        if (IPV4_RE.test(host)) return [host];
+        const answers = await doh(host, "A");
+        return answers
+            .filter(function (r) { return r.type === 1; })
+            .map(function (r) { return r.data; });
+    }
+
+    async function isAllowedDestination(host) {
+        const allow = (window.NOXITY_DEST_IPS || []).filter(Boolean);
+        if (allow.length === 0) return true;
+        const ips = await resolveAllIPs(host);
+        return ips.some(function (ip) { return allow.indexOf(ip) !== -1; });
+    }
+
+    /* ===== Provider modal copy ========================================== */
+
+    const PROVIDER_INFO = {
+        gmail: {
+            title: "Gmail requires an app password",
+            body: "Google no longer accepts your normal Gmail password for IMAP. To migrate you'll need to:",
+            steps: [
+                "Turn on 2-Step Verification on your Google account.",
+                "Generate a 16-character App Password.",
+                "Use that App Password (not your real password) in the next step.",
+            ],
+            guideLabel: "Google's App Password guide",
+            guideHref: "https://support.google.com/accounts/answer/185833",
+            primary: "I have my app password",
+        },
+        google_workspace: {
+            title: "Google Workspace setup needed",
+            body: "Your Workspace admin must enable IMAP, and you'll need an app password.",
+            steps: [
+                "Admin: enable IMAP at admin.google.com → Apps → Google Workspace → Gmail → End user access.",
+                "User: turn on 2-Step Verification, then create an App Password at myaccount.google.com/apppasswords.",
+                "If your org enforces SSO without app passwords, IMAP won't work — reach out to us for help.",
+            ],
+            guideLabel: "Workspace IMAP guide",
+            guideHref: "https://support.google.com/a/answer/105694",
+            primary: "Continue",
+        },
+        microsoft365: {
+            title: "Microsoft 365 setup needed",
+            body: "Microsoft 365 disables IMAP basic-auth by default. You'll need admin help and likely an app password.",
+            steps: [
+                "Admin: enable IMAP per mailbox — Set-CASMailbox -Identity you@example.com -ImapEnabled $true.",
+                "Admin: opt-in to Authenticated SMTP / IMAP at the tenant level if it's blocked.",
+                "User: with MFA on, create an App Password at account.microsoft.com → Security → Advanced.",
+            ],
+            guideLabel: "Microsoft IMAP guide",
+            guideHref: "https://learn.microsoft.com/exchange/clients-and-mobile-in-exchange-online/pop3-and-imap4/enable-or-disable-pop3-or-imap4-access",
+            primary: "Continue",
+        },
+        outlook_consumer: {
+            title: "Outlook requires an app password",
+            body: "Microsoft no longer accepts your normal password for outlook.com / hotmail.com / live.com IMAP.",
+            steps: [
+                "Turn on 2-Step Verification at account.microsoft.com → Security.",
+                "Open Advanced security options → App passwords and create one.",
+                "Use the App Password (not your real password) in the next step.",
+            ],
+            guideLabel: "Microsoft App Password guide",
+            guideHref: "https://support.microsoft.com/account-billing/manage-app-passwords-for-two-step-verification-d6dc8c6d-4bf7-4851-ad95-6d07799387e9",
+            primary: "I have my app password",
+        },
+        yahoo: {
+            title: "Yahoo requires an app password",
+            body: "Yahoo no longer accepts your normal password for IMAP.",
+            steps: [
+                "Sign in at login.yahoo.com → Account security.",
+                "Click Generate app password and create one.",
+                "Use that App Password (not your real password) in the next step.",
+            ],
+            guideLabel: "Yahoo App Password guide",
+            guideHref: "https://help.yahoo.com/kb/SLN15241.html",
+            primary: "I have my app password",
+        },
+        icloud: {
+            title: "iCloud requires an app-specific password",
+            body: "Apple requires an app-specific password for any third-party tool accessing your mailbox.",
+            steps: [
+                "Make sure 2FA is enabled on your Apple ID.",
+                "Sign in at appleid.apple.com → Sign-In and Security → App-Specific Passwords.",
+                "Generate a password and use it instead of your iCloud password.",
+            ],
+            guideLabel: "Apple App-Specific Password guide",
+            guideHref: "https://support.apple.com/HT204397",
+            primary: "I have my app password",
+        },
+        custom: null,
+    };
+
+    const REJECT_INFO = {
+        title: "We can't migrate to that destination",
+        body: "The destination server you entered doesn't resolve to a Noxity mail server. We only accept migrations into Noxity-hosted mailboxes.",
+        steps: [
+            "Double-check the destination hostname or IP.",
+            "If you're a Noxity customer, your DNS should point to one of our mail server IPs.",
+            "If you're stuck, contact our support team — we'll guide you through it.",
+        ],
+        guideLabel: null,
+        guideHref: null,
+        primary: "Got it",
+    };
+
+    function fillModal(info) {
+        const support = window.NOXITY_SUPPORT || "mailto:support@noxity.io";
+        $("#modal-title").text(info.title);
+        $("#modal-body").text(info.body);
+        const $list = $("#modal-steps").empty();
+        for (const step of info.steps) {
+            $list.append($("<li>").text(step));
+        }
+        if (info.guideHref) {
+            $("#modal-guide")
+                .attr("href", info.guideHref)
+                .text(info.guideLabel || "Open guide")
+                .css({ display: "" });
+        } else {
+            $("#modal-guide").css({ display: "none" });
+        }
+        $("#modal-support").attr("href", support);
+        $("#modal-btn-ok").text(info.primary || "OK");
+    }
+
+    function showProviderModal(kind) {
+        const info = PROVIDER_INFO[kind];
+        if (!info) return false;
+        fillModal(info);
+        $("#tos-modal").css({ display: "flex" });
+        return true;
+    }
+
+    function showRejectModal() {
+        fillModal(REJECT_INFO);
+        $("#tos-modal").css({ display: "flex" });
+    }
+
     const refresh_interval_ms = 6000;
     const refresh_interval_s = refresh_interval_ms / 1000;
     const test = {
@@ -166,25 +395,24 @@ $(document).ready(function () {
         );
     };
 
-    $("#next1").click(function () {
-        const userInput = $("#user1").val();
-        $.ajax({
-            url: "/run-script",
-            type: "GET",
-            data: { user_input: userInput },
-            success: function (response) {
-                $("#host1").val(response);
-                $("#tos-modal").css({
-                    display: "flex"
-                });
-            },
-        });
-        $("#start").css({
-            display: "none"
-        });
-        $("#imapserver").css({
-            display: "flex"
-        });
+    $("#next1").click(async function () {
+        const userInput = ($("#user1").val() || "").trim();
+        const at = userInput.lastIndexOf("@");
+        const domain = at >= 0 ? userInput.slice(at + 1).toLowerCase() : "";
+
+        $("#start").css({ display: "none" });
+        $("#imapserver").css({ display: "flex" });
+
+        if (!domain) return;
+        try {
+            const result = await detectProvider(domain);
+            if (result.host) {
+                $("#host1").val(result.host);
+            }
+            showProviderModal(result.kind);
+        } catch (e) {
+            /* leave host blank, continue without modal */
+        }
     });
 
     $("#next2").click(function () {
@@ -625,14 +853,24 @@ $(document).ready(function () {
             showpassword("password2", button);
         });
 
-        $("#bt-sync").click(function () {
+        $("#bt-sync").click(async function () {
+            const dest = ($("#host2").val() || "").trim();
+            if (!dest) return;
+
+            $("#bt-sync").prop("disabled", true);
+            const allowed = await isAllowedDestination(dest);
+            if (!allowed) {
+                showRejectModal();
+                $("#bt-sync").prop("disabled", false);
+                return;
+            }
+
             $("#confirmPage").css({
                 display: "none"
             });
             $("#consoleLogs").css({
                 display: "flex"
             });
-            $("#bt-sync").prop("disabled", true);
             $("#bt-abort").prop("disabled", false);
             $("#progress-txt").text("ETA: coming soon");
             store_form();
