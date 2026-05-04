@@ -552,9 +552,16 @@ body > header p strong { color: var(--nox-ink); font-weight: 600; }
    ============================================================= */
 
 .modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
     background: rgba(35,55,90,0.55) !important;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    overflow-y: auto;
 }
 
 .modal-content {
