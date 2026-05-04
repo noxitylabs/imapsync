@@ -395,6 +395,15 @@ $(document).ready(function () {
         );
     };
 
+    $("#form").on("submit", function (e) {
+        e.preventDefault();
+        if ($("#tos-modal").is(":visible")) {
+            $("#modal-btn-ok").click();
+            return;
+        }
+        $("#form > .box:visible").find("button[id^='next'], #bt-sync").first().click();
+    });
+
     $("#next1").click(async function () {
         const userInput = ($("#user1").val() || "").trim();
         const at = userInput.lastIndexOf("@");
