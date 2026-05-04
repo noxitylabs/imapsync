@@ -1,74 +1,721 @@
+/* =============================================================
+   Noxity Imapsync — UI styles
+   Built on Noxity Design System v2 (Metronome-inspired):
+   ink on paper, italic serif accents, mono eyebrows, deep radii.
+   ============================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 :root {
-    --pink: #e0819d;
-    --white: #fcfcfc;
-    --red: #c1033c;
-    --blue: #163052;
-    --green: #247155;
-    --orange: #f36c31;
-    --bred: #ff003d;
-    --bgreen: #1fa55d;
+    /* Brand */
+    --nox-ink:        #23375A;
+    --nox-ink-2:      #586581;
+    --nox-ink-mute:   #7A746A;
+    --nox-ink-faint:  #B8B2A6;
+
+    --nox-paper:      #F4F0E7;
+    --nox-paper-2:    #EFEBE3;
+    --nox-paper-3:    #E5DFD3;
+
+    --nox-crimson:        #B83553;
+    --nox-crimson-hover:  #9C2A45;
+    --nox-crimson-press:  #7E2138;
+
+    --nox-evergreen:      #4E7954;
+    --nox-evergreen-soft: #E4ECDF;
+
+    /* Pastel surfaces (for yes/no choice tiles) */
+    --nox-mint:       #C8DDD0;
+    --nox-pink-soft:  #F4D8DD;
+
+    --nox-success:    #4E7954;
+    --nox-danger:     #B83553;
+
+    /* Hairlines */
+    --nox-line:        rgba(35,55,90,0.10);
+    --nox-line-strong: rgba(35,55,90,0.18);
+    --nox-line-soft:   rgba(35,55,90,0.06);
+
+    /* Type */
+    --nox-sans:  'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --nox-serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+    --nox-mono:  'JetBrains Mono', ui-monospace, Menlo, monospace;
+
+    /* Radii */
+    --nox-radius-sm:   8px;
+    --nox-radius-md:   14px;
+    --nox-radius-lg:   20px;
+    --nox-radius-xl:   28px;
+    --nox-radius-pill: 999px;
+
+    /* Shadows */
+    --nox-shadow-soft: 0 1px 2px rgba(35,55,90,0.04), 0 8px 24px rgba(35,55,90,0.06);
+    --nox-shadow-card: 0 1px 0 rgba(35,55,90,0.04), 0 12px 32px rgba(35,55,90,0.08);
+
+    /* Motion */
+    --nox-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
+
+/* =============================================================
+   Reset / base
+   ============================================================= */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
 
 body {
-    color: white;
-    background-color: var(--blue);
-    font-family: "Roboto Slab", sans-serif;
+    background: var(--nox-paper-2);
+    color: var(--nox-ink);
+    font-family: var(--nox-sans);
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
 }
 
-.icon-check {
-    color: var(--green);
-}
-.icon-xmark {
-    color: var(--red);
+a { color: var(--nox-crimson); text-decoration: none; }
+a:hover { color: var(--nox-crimson-hover); text-decoration: underline; }
+
+hr {
+    border: 0;
+    border-top: 1px solid var(--nox-line);
+    margin: 0;
 }
 
-input {
-    background-color: var(--blue);
+/* =============================================================
+   Header — editorial display
+   ============================================================= */
+
+body > header {
+    text-align: center;
+    padding: 80px 24px 56px;
+    max-width: 920px;
+    margin: 0 auto;
 }
+
+body > header .nox-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--nox-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--nox-ink-2);
+    margin-bottom: 24px;
+}
+body > header .nox-eyebrow::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--nox-crimson);
+}
+
+body > header h1 {
+    font-family: var(--nox-sans);
+    font-weight: 700;
+    font-size: clamp(48px, 7vw, 88px);
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+    color: var(--nox-ink);
+    margin: 0 0 20px;
+    padding: 0;
+}
+
+body > header h1 em {
+    font-family: var(--nox-serif);
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--nox-crimson);
+}
+
+body > header p {
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--nox-ink-2);
+    margin: 0;
+    padding: 0;
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+body > header p strong { color: var(--nox-ink); font-weight: 600; }
+
+/* =============================================================
+   Main + step cards
+   ============================================================= */
+
+#main {
+    width: 100%;
+    padding: 0 24px 96px;
+}
+
+.box {
+    background: var(--nox-paper);
+    color: var(--nox-ink);
+    border: 1px solid var(--nox-line) !important;
+    border-radius: var(--nox-radius-xl);
+    box-shadow: var(--nox-shadow-card);
+    overflow: hidden;
+    width: 800px !important;
+    max-width: 100%;
+    height: auto !important;
+    min-height: 540px;
+    padding: 0 !important;
+    margin: 0 auto 24px !important;
+}
+
+.box .first {
+    padding: 22px 32px;
+    border-bottom: 1px solid var(--nox-line);
+    background: transparent;
+}
+
+.box .first > div {
+    font-family: var(--nox-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--nox-ink-2);
+    padding: 0 !important;
+    height: auto !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+.box .first > div::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--nox-crimson);
+}
+
+.box hr { display: none; }
+
+.box .second {
+    padding: 56px 48px 48px !important;
+    margin: 0 !important;
+    height: auto !important;
+    align-items: center;
+    gap: 28px !important;
+}
+
+.box .second i.fa-2x {
+    color: var(--nox-crimson);
+    font-size: 32px;
+    margin-bottom: 4px;
+}
+
+.box .second p.text-3xl {
+    font-family: var(--nox-sans);
+    font-weight: 700;
+    font-size: clamp(28px, 3vw, 38px);
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    color: var(--nox-ink);
+    max-width: 580px;
+    margin: 0;
+}
+
+.box .second p.text-3xl u {
+    text-decoration: none;
+    font-family: var(--nox-serif);
+    font-style: italic;
+    font-weight: 400;
+    color: var(--nox-crimson);
+    letter-spacing: -0.005em;
+}
+
+.box .second p.text-3xl.underline,
+.box .second p.text-2xl,
+.box .second p {
+    color: var(--nox-ink);
+}
+
+/* =============================================================
+   Inputs
+   ============================================================= */
+
+.box input[type="text"],
+.box input[type="password"],
+.box input:not([type="checkbox"]):not([type="radio"]) {
+    background: var(--nox-paper-2) !important;
+    color: var(--nox-ink) !important;
+    border: 1px solid var(--nox-line-strong) !important;
+    border-radius: var(--nox-radius-md) !important;
+    padding: 14px 16px !important;
+    font-family: var(--nox-sans);
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.4;
+    transition: border-color 180ms var(--nox-ease), box-shadow 180ms var(--nox-ease), background 180ms var(--nox-ease);
+    outline: none;
+    width: 100%;
+}
+
+.box input::placeholder {
+    color: var(--nox-ink-mute);
+    font-weight: 400;
+    opacity: 1;
+}
+
+.box input:hover:not([type="checkbox"]) {
+    border-color: var(--nox-ink-2) !important;
+}
+
+.box input:focus:not([type="checkbox"]) {
+    border-color: var(--nox-ink) !important;
+    background: var(--nox-paper) !important;
+    box-shadow: 0 0 0 4px rgba(35,55,90,0.08);
+}
+
+.box label {
+    font-family: var(--nox-sans);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--nox-ink-mute) !important;
+    line-height: 1.5;
+}
+
+.box label i {
+    font-style: italic;
+    font-family: var(--nox-serif);
+    color: var(--nox-ink-2);
+    font-weight: 400;
+}
+
+/* =============================================================
+   Buttons — primary CTA: ink, crimson hover
+   ============================================================= */
+
+.box button,
+#consoleLogs button,
+#bt-sync,
+#bt-abort,
+#toggleConsole,
+#next1, #next2, #next3, #next4 {
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--nox-ink) !important;
+    color: var(--nox-paper) !important;
+    border: 1px solid var(--nox-ink) !important;
+    border-radius: var(--nox-radius-pill) !important;
+    padding: 14px 28px !important;
+    font-family: var(--nox-sans) !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    transition: background 180ms var(--nox-ease), border-color 180ms var(--nox-ease), color 180ms var(--nox-ease), transform 180ms var(--nox-ease), box-shadow 180ms var(--nox-ease);
+    width: auto !important;
+    height: auto !important;
+    box-shadow: 0 1px 0 rgba(35,55,90,0.06);
+    min-width: 120px;
+    text-align: center;
+}
+
+.box button:hover,
+#consoleLogs button:hover,
+#bt-sync:hover,
+#bt-abort:hover,
+#toggleConsole:hover,
+#next1:hover, #next2:hover, #next3:hover, #next4:hover {
+    background: var(--nox-crimson) !important;
+    border-color: var(--nox-crimson) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 1px 0 rgba(35,55,90,0.06), 0 8px 20px rgba(184,53,83,0.25);
+}
+
+.box button:active,
+#bt-sync:active,
+#bt-abort:active {
+    transform: translateY(1px);
+}
+
+#bt-sync {
+    padding: 18px 36px !important;
+    font-size: 15px !important;
+}
+
+#bt-abort {
+    background: transparent !important;
+    color: var(--nox-crimson) !important;
+    border-color: var(--nox-crimson) !important;
+}
+#bt-abort:hover {
+    background: var(--nox-crimson) !important;
+    color: #FFFFFF !important;
+}
+
+#toggleConsole {
+    background: transparent !important;
+    color: var(--nox-ink) !important;
+    border-color: var(--nox-line-strong) !important;
+}
+#toggleConsole:hover {
+    background: var(--nox-paper-3) !important;
+    border-color: var(--nox-ink) !important;
+    color: var(--nox-ink) !important;
+}
+
+#modal-btn-ok {
+    background: var(--nox-ink) !important;
+    color: var(--nox-paper) !important;
+    border: 1px solid var(--nox-ink) !important;
+    border-radius: var(--nox-radius-pill) !important;
+    padding: 12px 28px !important;
+    font-family: var(--nox-sans);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 16px;
+    transition: background 180ms var(--nox-ease);
+}
+#modal-btn-ok:hover {
+    background: var(--nox-crimson) !important;
+    border-color: var(--nox-crimson) !important;
+    color: #FFFFFF !important;
+}
+
+/* =============================================================
+   Yes / No choice tiles
+   ============================================================= */
+
+#yesMail, #noMail, #yesPass, #noPass {
+    background: var(--nox-paper-2) !important;
+    border: 1px solid var(--nox-line) !important;
+    border-radius: var(--nox-radius-lg) !important;
+    padding: 36px 28px !important;
+    transition: background 200ms var(--nox-ease), border-color 200ms var(--nox-ease), transform 200ms var(--nox-ease), box-shadow 200ms var(--nox-ease);
+    cursor: pointer;
+}
+
+#yesMail, #yesPass {
+    background: var(--nox-evergreen-soft) !important;
+}
+#noMail, #noPass {
+    background: var(--nox-pink-soft) !important;
+}
+
+#yesMail:hover, #yesPass:hover,
+#noMail:hover, #noPass:hover {
+    border-color: var(--nox-ink) !important;
+    transform: translateY(-2px);
+    box-shadow: var(--nox-shadow-card);
+}
+
+#yesMail .icon-check, #yesPass .icon-check { color: var(--nox-evergreen); }
+#noMail .icon-xmark, #noPass .icon-xmark { color: var(--nox-crimson); }
+
+.icon-check { color: var(--nox-evergreen); }
+.icon-xmark { color: var(--nox-crimson); }
+
+#yesMail p.text-3xl, #yesPass p.text-3xl,
+#noMail p.text-3xl, #noPass p.text-3xl {
+    font-family: var(--nox-sans);
+    font-weight: 700;
+    font-size: 24px;
+    text-decoration: none !important;
+    color: var(--nox-ink) !important;
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+#yesMail p.text-2xl, #yesPass p.text-2xl,
+#noMail p.text-2xl, #noPass p.text-2xl {
+    font-family: var(--nox-sans);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--nox-ink-2) !important;
+    line-height: 1.5;
+    margin: 0;
+    text-align: center;
+}
+
+/* =============================================================
+   Confirm page — OLD/NEW pills
+   ============================================================= */
 
 .old-new {
-    color: var(--blue);
-    background-color: var(--white);
+    color: var(--nox-paper) !important;
+    background: var(--nox-ink) !important;
+    border-radius: var(--nox-radius-pill) !important;
+    font-family: var(--nox-mono) !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.14em !important;
+    text-transform: uppercase;
+    height: 28px !important;
+    width: auto !important;
+    padding: 0 14px !important;
+    line-height: 1 !important;
 }
+
+#migrationText {
+    font-family: var(--nox-serif);
+    font-style: italic;
+    font-size: 18px;
+    color: var(--nox-ink-2) !important;
+    margin-top: 12px !important;
+}
+
+#oldM, #newM {
+    font-family: var(--nox-mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--nox-ink);
+    letter-spacing: 0.02em;
+}
+
+/* =============================================================
+   Console / log boxes
+   ============================================================= */
 
 #consoleStop,
 #consoleLaunch,
 #log {
-    margin-bottom: 32px;
-    background-color: var(--blue);
-    color: white;
-    border: 1px solid var(--white);
-    width: 600px;
-    height: 430px;
+    background: #131A28 !important;
+    color: #F0EBE2 !important;
+    border: 1px solid var(--nox-line-strong) !important;
+    border-radius: var(--nox-radius-lg) !important;
+    width: 720px !important;
+    max-width: 100%;
+    height: 360px !important;
     overflow: auto;
+    margin-bottom: 20px !important;
+    padding: 20px 24px !important;
+    font-family: var(--nox-mono);
+    font-size: 12px;
+    line-height: 1.7;
 }
 
+#consoleStop h2,
+#consoleLaunch h2,
+#log h2 {
+    font-family: var(--nox-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #B8B4AA;
+    margin: 0 0 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(247,245,240,0.10);
+}
+
+#abort, #console, #output {
+    color: #F0EBE2;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+#consoleLogs {
+    background: var(--nox-paper) !important;
+    border: 1px solid var(--nox-line) !important;
+    border-radius: var(--nox-radius-xl) !important;
+    box-shadow: var(--nox-shadow-card);
+    width: 800px !important;
+    max-width: 100%;
+    margin: 0 auto !important;
+    padding: 32px !important;
+    gap: 20px !important;
+}
+
+#consoleLogs > .w-full {
+    background: var(--nox-paper-3) !important;
+    border-radius: var(--nox-radius-pill) !important;
+    height: 8px !important;
+    overflow: hidden;
+}
+
+#progress-bar-done {
+    background: var(--nox-crimson) !important;
+    height: 8px !important;
+    border-radius: var(--nox-radius-pill) !important;
+    transition: width 320ms var(--nox-ease);
+}
+
+/* =============================================================
+   Modal
+   ============================================================= */
+
 .modal {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: fixed;
-    z-index: 9999;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
+    background: rgba(35,55,90,0.55) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .modal-content {
-    background: var(--blue);
-    padding: 20px;
-    width: 80%;
-    max-width: 600px;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    background: var(--nox-paper) !important;
+    color: var(--nox-ink) !important;
+    border: 1px solid var(--nox-line) !important;
+    border-radius: var(--nox-radius-xl) !important;
+    padding: 36px 32px !important;
+    max-width: 480px !important;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(35,55,90,0.30);
     text-align: center;
 }
 
-#modal-btn-ok {
-    border: 2px solid;
+.modal-content h2 {
+    font-family: var(--nox-sans);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--nox-ink);
+    letter-spacing: -0.02em;
+    margin: 0 0 12px !important;
+}
+
+.modal-content p {
+    font-family: var(--nox-sans);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--nox-ink-2);
+    margin: 0 0 20px !important;
+}
+
+.modal-content a {
+    color: var(--nox-crimson);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* =============================================================
+   Congrats page
+   ============================================================= */
+
+#congratsPage {
+    background: var(--nox-paper);
+    border: 1px solid var(--nox-line);
+    border-radius: var(--nox-radius-xl);
+    box-shadow: var(--nox-shadow-card);
+    width: 800px !important;
+    max-width: 100%;
+    margin: 24px auto !important;
+    padding: 80px 48px !important;
+    gap: 24px !important;
+}
+
+#congratsPage i.fa-trophy {
+    color: var(--nox-evergreen) !important;
+    font-size: 56px;
+}
+
+#congratsPage h1 {
+    font-family: var(--nox-sans);
+    font-weight: 700;
+    font-size: 56px;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--nox-ink) !important;
+    margin: 0;
+}
+
+#congratsPage p {
+    font-family: var(--nox-sans);
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--nox-ink-2) !important;
+    max-width: 480px;
+    margin: 0;
+}
+
+/* =============================================================
+   Checkbox
+   ============================================================= */
+
+input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--nox-line-strong);
     border-radius: 5px;
-    padding: 5px 15px 5px 15px;
-    margin-top: 10px;
+    background: var(--nox-paper);
+    cursor: pointer;
+    vertical-align: middle;
+    margin-right: 8px;
+    transition: background 180ms var(--nox-ease), border-color 180ms var(--nox-ease);
+    position: relative;
+}
+
+input[type="checkbox"]:hover { border-color: var(--nox-ink); }
+
+input[type="checkbox"]:checked {
+    background: var(--nox-ink);
+    border-color: var(--nox-ink);
+}
+
+input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 1px;
+    width: 5px;
+    height: 10px;
+    border: solid var(--nox-paper);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+label[for="verbose"], label[for="dry"] {
+    font-family: var(--nox-sans);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--nox-ink-2) !important;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* =============================================================
+   Footer
+   ============================================================= */
+
+footer {
+    border-top: 1px solid var(--nox-line);
+    margin-top: 64px;
+    padding: 32px 24px 48px;
+}
+
+footer .text-center {
+    font-family: var(--nox-sans);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--nox-ink-mute) !important;
+    max-width: 720px;
+    margin: 0 auto !important;
+}
+
+footer a {
+    color: var(--nox-crimson);
+    font-weight: 600;
+}
+
+/* =============================================================
+   Responsive
+   ============================================================= */
+
+@media (max-width: 880px) {
+    body > header { padding: 56px 20px 40px; }
+    .box {
+        width: 100% !important;
+        min-height: 0;
+    }
+    .box .second { padding: 40px 24px 32px !important; }
+    #consoleStop, #consoleLaunch, #log { width: 100% !important; height: 280px !important; }
+    #consoleLogs, #congratsPage { padding: 32px 20px !important; }
+    #congratsPage h1 { font-size: 40px; }
 }

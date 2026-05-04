@@ -169,7 +169,7 @@ $(document).ready(function () {
     $("#next1").click(function () {
         const userInput = $("#user1").val();
         $.ajax({
-            url: "http://localhost:8080/run-script",
+            url: "/run-script",
             type: "GET",
             data: { user_input: userInput },
             success: function (response) {
