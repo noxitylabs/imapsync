@@ -179,15 +179,26 @@ chown -R www-data:www-data /var/www/html
 Optionally make `imapsync_form_extra.html` the directory index so the clean URL
 `https://migrate.noxity.io/` opens it — add to the vhost below.
 
-### 5. HTTPS + vhost
+### 5. HTTPS via a Cloudflare Origin certificate
+
+This site sits behind Cloudflare, so the origin serves a **Cloudflare Origin
+certificate** (a long-lived cert Cloudflare trusts) — there's no certbot /
+Let's Encrypt.
+
+**a. Create the Origin cert** in the Cloudflare dashboard → **SSL/TLS → Origin
+Server → Create Certificate**. Pick RSA or ECDSA, hostnames `migrate.noxity.io`
+(or `*.noxity.io`), 15-year validity. Save the two blocks on the server:
 
 ```bash
-apt install -y certbot python3-certbot-apache
-certbot --apache -d migrate.noxity.io     # issues the cert and writes the vhost
+mkdir -p /etc/ssl/cloudflare
+# Paste the CERTIFICATE block into this file:
+nano /etc/ssl/cloudflare/migrate.noxity.io.pem
+# Paste the PRIVATE KEY block into this file:
+nano /etc/ssl/cloudflare/migrate.noxity.io.key
+chmod 600 /etc/ssl/cloudflare/migrate.noxity.io.key
 ```
 
-Then edit `/etc/apache2/sites-enabled/migrate.noxity.io-le-ssl.conf` so it
-contains (key bits):
+**b. Write the vhost** at `/etc/apache2/sites-available/migrate.noxity.io.conf`:
 
 ```apache
 <VirtualHost *:443>
@@ -195,18 +206,30 @@ contains (key bits):
     DocumentRoot /var/www/html
     DirectoryIndex imapsync_form_extra.html index.html
 
-    # Custom UI is public
     <Directory /var/www/html>
         Require all granted
     </Directory>
 
-    # ... certbot's SSLCertificate* lines ...
+    SSLEngine on
+    SSLCertificateFile    /etc/ssl/cloudflare/migrate.noxity.io.pem
+    SSLCertificateKeyFile /etc/ssl/cloudflare/migrate.noxity.io.key
 </VirtualHost>
 ```
 
 ```bash
+a2enmod ssl
+a2ensite migrate.noxity.io
 apachectl configtest && systemctl reload apache2
 ```
+
+**c. Cloudflare side:**
+
+- DNS: the `migrate` record → **proxied** (orange cloud).
+- **SSL/TLS → Overview → encryption mode → Full (strict).** The Origin cert
+  validates fine under strict.
+
+No `*:80` vhost is needed — Cloudflare reaches the origin over HTTPS (443).
+Turn on **Always Use HTTPS** in Cloudflare so visitors are upgraded too.
 
 You now have the custom UI live at `https://migrate.noxity.io/`.
 
@@ -298,7 +321,8 @@ cache them.
 - **Keep imapsync updated** (`cd /opt/imapsync && git pull && make install && cp
   imapsync /usr/lib/cgi-bin/`). The CGI runs migrations with user-supplied
   credentials; past versions had shell-injection issues that are fixed upstream.
-- **Always serve over HTTPS** — credentials are POSTed in the clear otherwise.
+- **Always serve over HTTPS** — the Cloudflare Origin cert above with encryption
+  mode **Full (strict)**; credentials are POSTed in the clear otherwise.
 - **`/bypass/` must stay behind auth.** It's the unrestricted form.
 - Credentials the customer types are cached in the browser's `localStorage`
   (inherited imapsync behaviour) and cleared by "Start over".
