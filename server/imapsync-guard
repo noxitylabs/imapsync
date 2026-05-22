@@ -1,0 +1,142 @@
+#!/usr/bin/perl
+#
+# Noxity imapsync destination guard  —  CGI wrapper
+# =================================================
+# Installed at  /usr/lib/cgi-bin/imapsync  (public, NO auth).
+#
+# The browser's noxity-ips.js check is client-side only and trivially
+# bypassed with curl. This wrapper re-does that check on the server, where
+# it can't be skipped: it pulls the destination (host2) out of the POST,
+# resolves it, and only hands the request to the real imapsync if it lands
+# on an allow-listed Noxity IP. Everything else is refused.
+#
+# The real imapsync lives at $IMAPSYNC_REAL and is also exposed directly,
+# behind HTTP basic auth, at /cgi-bin/imapsync-staff for support (/bypass/).
+#
+# No CPAN deps — core Perl + Socket only (already present for imapsync).
+# See the README, "Locking the backend (server-side enforcement)".
+
+use strict;
+use warnings;
+use Socket qw(inet_ntoa);
+
+# ---- config ---------------------------------------------------------------
+my $IMAPSYNC_REAL = '/usr/lib/cgi-bin/imapsync-staff';  # the real program
+my $ALLOWLIST     = '/var/www/html/noxity-ips.js';      # single source of truth
+# ---------------------------------------------------------------------------
+
+binmode STDIN;
+binmode STDOUT;
+$| = 1;                          # stream imapsync's log live, never buffer
+
+# Slurp the POST body (exactly CONTENT_LENGTH bytes), then pull out host2.
+my $body = read_body($ENV{CONTENT_LENGTH} || 0);
+my $dest = form_field($body, 'host2');
+
+if (is_allowed($dest)) {
+    run_real($body);             # hand off; returns after the child finishes
+} else {
+    refuse($dest);
+}
+exit 0;
+
+# ---- helpers --------------------------------------------------------------
+
+sub read_body {
+    my ($want) = @_;
+    my $buf = '';
+    return $buf if $want <= 0;
+    my $got = 0;
+    while ($got < $want) {
+        my $n = read(STDIN, my $chunk, $want - $got);
+        last if !defined $n || $n == 0;
+        $buf .= $chunk;
+        $got += $n;
+    }
+    return $buf;
+}
+
+# application/x-www-form-urlencoded -> the named field, decoded.
+sub form_field {
+    my ($buf, $name) = @_;
+    for my $pair (split /&/, $buf) {
+        my ($k, $v) = split /=/, $pair, 2;
+        next unless defined $k && $k eq $name;
+        $v = defined $v ? $v : '';
+        $v =~ tr/+/ /;
+        $v =~ s/%([0-9A-Fa-f]{2})/chr hex $1/ge;
+        return $v;
+    }
+    return '';
+}
+
+# IPs pulled straight out of noxity-ips.js so browser and server never
+# disagree. Missing file or empty list => no IPs => nothing is allowed.
+sub allowed_ips {
+    open my $fh, '<', $ALLOWLIST or return ();
+    local $/;
+    my $txt = <$fh>;
+    close $fh;
+    return $txt =~ /"(\d{1,3}(?:\.\d{1,3}){3})"/g;
+}
+
+sub is_allowed {
+    my ($host) = @_;
+    $host =~ s/^\s+|\s+$//g;
+    return 0 if $host eq '';
+
+    my %ok = map { $_ => 1 } allowed_ips();
+    return 0 unless %ok;                          # fail closed: deny if no list
+
+    if ($host =~ /^\d{1,3}(?:\.\d{1,3}){3}$/) {   # destination is a literal IP
+        return $ok{$host} ? 1 : 0;
+    }
+    for my $ip (resolve_a($host)) {               # otherwise resolve A records
+        return 1 if $ok{$ip};
+    }
+    return 0;
+}
+
+sub resolve_a {
+    my ($host) = @_;
+    my @h = gethostbyname($host) or return ();    # IPv4-only, matches the UI
+    return map { inet_ntoa($_) } @h[4 .. $#h];
+}
+
+# Allowed: run the real imapsync, feeding it the same body on stdin and
+# letting its stdout/stderr flow straight back to Apache (live streaming).
+sub run_real {
+    my ($body) = @_;
+    fail("real imapsync not executable at $IMAPSYNC_REAL") unless -x $IMAPSYNC_REAL;
+
+    pipe(my $rd, my $wr) or fail("pipe: $!");
+    defined(my $pid = fork) or fail("fork: $!");
+
+    unless ($pid) {                  # child: stdin <- pipe; stdout/stderr -> Apache
+        close $wr;
+        open STDIN, '<&', $rd or exit 1;
+        exec { $IMAPSYNC_REAL } $IMAPSYNC_REAL or exit 1;
+    }
+
+    close $rd;                       # parent: push the saved body in, then wait
+    print {$wr} $body;
+    close $wr;
+    waitpid $pid, 0;
+}
+
+sub refuse {
+    my ($host) = @_;
+    $host = $host ne '' ? $host : '(none)';
+    print "Status: 403 Forbidden\r\n",
+          "Content-Type: text/plain; charset=utf-8\r\n\r\n",
+          "Refused: \"$host\" is not a Noxity destination.\n",
+          "Migrations are only accepted into Noxity-hosted mailboxes.\n";
+}
+
+sub fail {
+    my ($msg) = @_;
+    print "Status: 500 Internal Server Error\r\n",
+          "Content-Type: text/plain\r\n\r\n",
+          "imapsync guard error: $msg\n";
+    exit 1;
+}

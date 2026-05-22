@@ -5,8 +5,9 @@ the open-source IMAP copy engine by Gilles Lamiral. Customers walk through a
 short wizard (source → destination → confirm), watch live progress, and the
 backend is plain imapsync running as a CGI.
 
-This repo contains **only the front end**. imapsync itself (the Perl program /
-CGI) is installed separately on the server — see [Deploy from scratch](#deploy-from-scratch-debian-13).
+This repo is the front end plus one optional server-side script
+(`server/imapsync-guard`). imapsync itself (the Perl program / CGI) is installed
+separately on the server — see [Deploy from scratch](#deploy-from-scratch-debian-13).
 
 ---
 
@@ -18,6 +19,7 @@ CGI) is installed separately on the server — see [Deploy from scratch](#deploy
 | `imapsync_form.css` | All styling (the "Noxity Design System" — ink-on-paper, dark mode). |
 | `imapsync_form.js` | All behaviour: wizard steps, provider detection, validation, live progress. |
 | `noxity-ips.js` | **Config** — destination allowlist + support contact. Edit this per environment. |
+| `server/imapsync-guard` | **Server-side** CGI wrapper that enforces the allowlist (optional — see [Locking the backend](#locking-the-backend-server-side-enforcement)). |
 | `credits.html` | License/attribution page for imapsync (linked from the footer). |
 | `favicon.ico`, `logo_imapsync_Xn.png` | Assets. |
 
@@ -258,7 +260,10 @@ cp /opt/imapsync/imapsync_form.js        /var/www/html/bypass/
 chown -R www-data:www-data /var/www/html/bypass
 ```
 
-Both UIs POST to the same `/cgi-bin/imapsync`, so the stock form works unchanged.
+Both UIs POST to imapsync's CGI, so the stock form works unchanged — until you
+enable [server-side enforcement](#locking-the-backend-server-side-enforcement),
+which repoints the bypass copy at `/cgi-bin/imapsync-staff` (one `action` change,
+covered there).
 
 ### 2. Password-protect it
 
@@ -289,7 +294,95 @@ Result:
 |-----|-----|------|
 | `https://migrate.noxity.io/` | Customers | none (public) |
 | `https://migrate.noxity.io/bypass/` | Support | HTTP basic auth |
-| `https://migrate.noxity.io/cgi-bin/imapsync` | both UIs | shared backend |
+| `https://migrate.noxity.io/cgi-bin/imapsync` | Public UI | none — shared backend until you add the [wrapper](#locking-the-backend-server-side-enforcement) |
+| `https://migrate.noxity.io/cgi-bin/imapsync-staff` | Bypass UI | HTTP basic auth — exists once enforcement is enabled |
+
+---
+
+## Locking the backend (server-side enforcement)
+
+By default `/cgi-bin/imapsync` is an **open backend**: `noxity-ips.js` only runs in
+the browser, so anyone can `curl` straight to the CGI with any `host1` / `host2` /
+credentials and have the box open IMAP sessions to arbitrary servers. To make the
+allowlist a real control, split the single CGI in two:
+
+| Endpoint | Used by | Auth | Destinations |
+|----------|---------|------|--------------|
+| `/cgi-bin/imapsync` | Public UI | none | **allow-listed only** (checked by the wrapper) |
+| `/cgi-bin/imapsync-staff` | `/bypass/` (support) | HTTP basic auth | any (unrestricted) |
+
+`server/imapsync-guard` becomes the public CGI. It re-runs the destination check
+server-side — pulls `host2` from the POST, resolves it (or takes a literal IP),
+and only execs the real imapsync if it matches an IP in `noxity-ips.js`; otherwise
+it returns `403`. The real imapsync moves to `imapsync-staff`, now behind the same
+basic auth as `/bypass/`, so the unrestricted path is **staff-only instead of open
+to the world**.
+
+> **Fail-closed:** unlike the browser (empty list = check disabled, for local
+> testing), the wrapper **denies everything** if `noxity-ips.js` is missing or has
+> no IPs. A security control should fail safe.
+
+### Steps
+
+Assumes the base install is done (imapsync at `/usr/lib/cgi-bin/imapsync`, UI
+checkout at `/opt/imapsync-ui`, `/bypass/` set up with `.htpasswd-bypass`).
+
+```bash
+# 1. Move the real imapsync to the staff endpoint.
+cp /opt/imapsync/imapsync /usr/lib/cgi-bin/imapsync-staff
+chmod 755 /usr/lib/cgi-bin/imapsync-staff
+
+# 2. Install the wrapper as the public CGI (it takes over /cgi-bin/imapsync).
+cp /opt/imapsync-ui/server/imapsync-guard /usr/lib/cgi-bin/imapsync
+chmod 755 /usr/lib/cgi-bin/imapsync
+perl -c /usr/lib/cgi-bin/imapsync          # syntax sanity check
+
+# 3. Repoint the bypass form at the unrestricted endpoint (idempotent).
+perl -pi -e 's{/cgi-bin/imapsync(?!-staff)}{/cgi-bin/imapsync-staff}g' \
+  /var/www/html/bypass/index.html \
+  /var/www/html/bypass/imapsync_form.js
+# (also .../bypass/imapsync_form_extra.html if you deployed it)
+```
+
+Put basic auth on the staff endpoint **server-wide** (a `<Location>` inside one
+vhost wouldn't cover a stray `:80`), then reload:
+
+```bash
+cat > /etc/apache2/conf-available/imapsync-staff.conf <<'EOF'
+# Staff-only unrestricted imapsync backend (used by /bypass/)
+<Location /cgi-bin/imapsync-staff>
+    AuthType Basic
+    AuthName "Noxity support — imapsync (staff only)"
+    AuthUserFile /etc/apache2/.htpasswd-bypass
+    Require valid-user
+</Location>
+EOF
+a2enconf imapsync-staff
+apachectl configtest && systemctl reload apache2
+```
+
+The wrapper reads the allowlist from `/var/www/html/noxity-ips.js` (one source of
+truth with the browser). Edit `$ALLOWLIST` / `$IMAPSYNC_REAL` at the top of the
+script if your paths differ.
+
+### Verify
+
+```bash
+# Public CGI refuses a non-Noxity destination, even via raw curl:
+curl -s -X POST -d 'host2=example.com' http://localhost/cgi-bin/imapsync
+#  -> Refused: "example.com" is not a Noxity destination.
+
+# Public CGI lets an allow-listed destination through to imapsync:
+curl -s -X POST -d 'host2=<an-allow-listed-ip>' http://localhost/cgi-bin/imapsync | head
+#  -> imapsync's log (you're past the guard)
+
+# Staff endpoint now requires auth:
+curl -s -o /dev/null -w '%{http_code}\n' -X POST http://localhost/cgi-bin/imapsync-staff   # -> 401
+curl -s -u support:PASS  -X POST http://localhost/cgi-bin/imapsync-staff | head            # -> imapsync banner
+```
+
+The `/bypass/` form keeps working because it now POSTs to `imapsync-staff`; staff
+authenticate once for the form and the CGI shares the same login.
 
 ---
 
@@ -313,14 +406,16 @@ cache them.
 
 ## Security notes
 
-- **The destination allowlist is client-side only.** `noxity-ips.js` runs in the
-  browser; a determined user can POST straight to `/cgi-bin/imapsync` with any
-  destination. Treat it as a guardrail, not a control. If you need real
-  enforcement, validate the destination server-side (a wrapper around the CGI, or
-  a patch to imapsync).
-- **Keep imapsync updated** (`cd /opt/imapsync && git pull && make install && cp
-  imapsync /usr/lib/cgi-bin/`). The CGI runs migrations with user-supplied
+- **The destination allowlist is client-side by default.** `noxity-ips.js` runs in
+  the browser; without the wrapper a determined user can POST straight to
+  `/cgi-bin/imapsync` with any destination. For real enforcement, enable the
+  server-side wrapper — see [Locking the backend](#locking-the-backend-server-side-enforcement).
+- **Keep imapsync updated** (`cd /opt/imapsync && git pull && make install`, then
+  copy the binary into place). The CGI runs migrations with user-supplied
   credentials; past versions had shell-injection issues that are fixed upstream.
+  ⚠️ With the wrapper enabled the real program is `imapsync-staff`, so copy to
+  `/usr/lib/cgi-bin/imapsync-staff` — never over `/usr/lib/cgi-bin/imapsync`, which
+  is the wrapper.
 - **Always serve over HTTPS** — the Cloudflare Origin cert above with encryption
   mode **Full (strict)**; credentials are POSTed in the clear otherwise.
 - **`/bypass/` must stay behind auth.** It's the unrestricted form.
