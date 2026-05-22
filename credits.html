@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" id="top">
+    <head>
+        <title>Credits · Noxity</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script>
+            /* Apply the saved (or system) theme before first paint — no flash. */
+            (function () {
+                try {
+                    var t = localStorage.getItem("nox-theme");
+                    if (!t) {
+                        t = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)
+                            ? "dark" : "light";
+                    }
+                    document.documentElement.setAttribute("data-theme", t);
+                } catch (e) { /* localStorage blocked — fall back to light */ }
+            })();
+        </script>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="imapsync_form.css"/>
+        <link rel="license" href="https://imapsync.lamiral.info/LICENSE">
+
+        <link rel="icon" href="./favicon.ico" type="image/x-icon" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet"
+              href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+              integrity="sha384-5e2ESR8Ycmos6g3gAKr1Jvwye8sW4U1u/cAKulfVJnkakCcMqhOudbtPnvJ+nbv7"
+              crossorigin="anonymous" />
+    </head>
+    <body>
+        <div id="nav-bar" class="nav-bar">
+            <a href="imapsync_form_extra.html" class="nav-btn" aria-label="Back to the migration form">
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Back</span>
+            </a>
+            <button type="button" id="bt-theme" class="nav-btn"
+                    aria-label="Switch to dark mode" aria-pressed="false">
+                <i class="fa-solid fa-moon" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <header>
+            <span class="nox-eyebrow">Noxity · Credits</span>
+            <h1>Built on <em>imapsync</em>.</h1>
+            <p>This migration tool runs on <strong>imapsync</strong>, the open-source IMAP sync engine written by Gilles Lamiral.</p>
+        </header>
+
+        <div id="main" class="flex flex-col justify-center items-center">
+            <div class="box credit-card flex flex-col">
+                <div class="first flex justify-start items-center">
+                    <div class="text-2xl pl-4 py-2 h-full">Credits &amp; license</div>
+                </div>
+                <hr>
+
+                <div class="second flex flex-col justify-start items-center gap-4">
+                    <i class="fa-solid fa-heart fa-2x"></i>
+                    <p>imapsync is written and maintained by <strong>Gilles Lamiral</strong>. The mailbox
+                        copy you just ran &mdash; every folder, flag, and date kept intact, with no
+                        duplicates &mdash; is his work. Noxity only wraps it in this guided form.</p>
+                    <p>imapsync ships under its own licence. If you rely on it, please keep this credit
+                        visible and read the terms.</p>
+                    <div class="credit-links">
+                        <a href="https://imapsync.lamiral.info/" target="_blank" rel="noopener">imapsync.lamiral.info</a>
+                        <a href="https://imapsync.lamiral.info/LICENSE" target="_blank" rel="noopener">License</a>
+                        <a href="https://imapsync.lamiral.info/NOLIMIT" target="_blank" rel="noopener">NOLIMIT terms</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="site-footer">
+            <p><a href="imapsync_form_extra.html">Back to the migration form</a></p>
+        </footer>
+
+        <script>
+            /* Theme toggle — same behaviour as the form page, no jQuery needed here. */
+            (function () {
+                var btn = document.getElementById("bt-theme");
+                function apply(theme) {
+                    document.documentElement.setAttribute("data-theme", theme);
+                    var dark = theme === "dark";
+                    btn.setAttribute("aria-pressed", dark ? "true" : "false");
+                    btn.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+                    btn.querySelector("i").className = dark ? "fa-solid fa-sun" : "fa-solid fa-moon";
+                }
+                apply(document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light");
+                btn.addEventListener("click", function () {
+                    var next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+                    try { localStorage.setItem("nox-theme", next); } catch (e) { /* ignore */ }
+                    apply(next);
+                });
+            })();
+        </script>
+    </body>
+</html>

@@ -328,6 +328,129 @@ $(document).ready(function () {
         $("#tos-modal").css({ display: "flex" });
     }
 
+    /* ===== Wizard navigation + Back button (Task 3) ===================== */
+
+    /* We keep our own step stack rather than the HTML5 History API: this is an
+       in-form, show/hide wizard, so a self-managed stack moves between steps
+       without a refresh and without hijacking the browser's global back button
+       (which should still leave the page). */
+    const navStack = [];
+
+    const setBackVisible = function setBackVisible(visible) {
+        // Toggle via inline display because .nav-btn sets its own display,
+        // so the class-based .hidden rule would not win over it.
+        $("#bt-back").css({ display: visible ? "inline-flex" : "none" });
+    };
+
+    const navTo = function navTo(toId) {
+        const fromId = $("#form > .box:visible").attr("id");
+        if (fromId) {
+            navStack.push(fromId);
+            $("#" + fromId).css({ display: "none" });
+        }
+        $("#" + toId).css({ display: "flex" });
+        setBackVisible(navStack.length > 0);
+    };
+
+    $("#bt-back").click(function () {
+        if (navStack.length === 0) {
+            return;
+        }
+        const toId = navStack.pop();
+        $("#form > .box:visible").css({ display: "none" });
+        $("#" + toId).css({ display: "flex" });
+        setBackVisible(navStack.length > 0);
+    });
+
+    /* ===== Theme switcher (Task 3) ===================================== */
+
+    /* One toggle that persists the choice in localStorage so it survives
+       reloads (the head script applies it before first paint to avoid a flash);
+       this combines the "toggle button" and "local storage" options. */
+    const THEME_KEY = "nox-theme";
+
+    const applyTheme = function applyTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+        const dark = theme === "dark";
+        $("#bt-theme")
+            .attr("aria-pressed", dark ? "true" : "false")
+            .attr("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+        $("#bt-theme i").attr(
+            "class",
+            dark ? "fa-solid fa-sun" : "fa-solid fa-moon"
+        );
+    };
+
+    // Sync the button with whatever the head script already set on <html>.
+    applyTheme(
+        document.documentElement.getAttribute("data-theme") === "dark"
+            ? "dark"
+            : "light"
+    );
+
+    $("#bt-theme").click(function () {
+        const next =
+            document.documentElement.getAttribute("data-theme") === "dark"
+                ? "light"
+                : "dark";
+        try {
+            localStorage.setItem(THEME_KEY, next);
+        } catch (e) {
+            /* localStorage blocked — theme still applies for this session */
+        }
+        applyTheme(next);
+    });
+
+    /* ===== Form validation (Task 4) ==================================== */
+
+    /* Custom JS validation: the wizard advances with type="button" controls and
+       the form's submit is prevented, so native HTML5 required/email validation
+       never fires. We validate per step and show inline, role="alert" feedback. */
+    const isEmail = function isEmail(v) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+    };
+
+    const setFieldValidity = function setFieldValidity(sel, valid, message) {
+        const $f = $(sel);
+        const $err = $("#" + $f.attr("id") + "-error");
+        if (valid) {
+            $f.removeClass("invalid").attr("aria-invalid", "false");
+            $err.addClass("hidden");
+        } else {
+            $f.addClass("invalid").attr("aria-invalid", "true");
+            $err.text(message).removeClass("hidden");
+        }
+        return valid;
+    };
+
+    // specs: [{ sel, message, test? }]. Returns true when every field passes.
+    const requireFields = function requireFields(specs) {
+        let firstBad = null;
+        specs.forEach(function (s) {
+            const val = ($(s.sel).val() || "").trim();
+            const valid = s.test ? s.test(val) : val.length > 0;
+            setFieldValidity(s.sel, valid, s.message);
+            if (!valid && !firstBad) {
+                firstBad = s.sel;
+            }
+        });
+        if (firstBad) {
+            $(firstBad).trigger("focus");
+        }
+        return firstBad === null;
+    };
+
+    // Clear a field's error as soon as the user types something into it.
+    ["#user1", "#user2", "#host1", "#host2", "#password1", "#password2"].forEach(
+        function (sel) {
+            $(sel).on("input", function () {
+                if (($(this).val() || "").trim()) {
+                    setFieldValidity(sel, true);
+                }
+            });
+        }
+    );
+
     const refresh_interval_ms = 6000;
     const refresh_interval_s = refresh_interval_ms / 1000;
     const test = {
@@ -405,12 +528,19 @@ $(document).ready(function () {
     });
 
     $("#next1").click(async function () {
+        if (!requireFields([{
+            sel: "#user1",
+            message: "Please enter your current e-mail address.",
+            test: isEmail,
+        }])) {
+            return;
+        }
+
         const userInput = ($("#user1").val() || "").trim();
         const at = userInput.lastIndexOf("@");
         const domain = at >= 0 ? userInput.slice(at + 1).toLowerCase() : "";
 
-        $("#start").css({ display: "none" });
-        $("#imapserver").css({ display: "flex" });
+        navTo("imapserver");
 
         if (!domain) return;
         try {
@@ -425,24 +555,20 @@ $(document).ready(function () {
     });
 
     $("#next2").click(function () {
-        $("#imapserver").css({
-            display: "none"
-        });
-        $("#isSameMail").css({
-            display: "flex"
-        });
+        if (!requireFields([
+            { sel: "#host1", message: "Enter the source server hostname or IP." },
+            { sel: "#host2", message: "Enter the destination server hostname or IP." },
+        ])) {
+            return;
+        }
+        navTo("isSameMail");
         const src = $("#host1").val();
         const dest = $("#host2").val();
         $("#migrationText").text("Migrating from " + src + " to " + dest);
     });
 
     $("#yesMail").click(function () {
-        $("#isSameMail").css({
-            display: "none"
-        });
-        $("#isSamePass").css({
-            display: "flex"
-        });
+        navTo("isSamePass");
         $("#user2").val($("#user1").val());
     });
 
@@ -450,32 +576,24 @@ $(document).ready(function () {
     let flag_isPassSame = true;
 
     $("#noMail").click(function () {
-        $("#isSameMail").css({
-            display: "none"
-        });
-        $("#notSameMail").css({
-            display: "flex"
-        });
+        navTo("notSameMail");
         flag_isMailSame = false;
     });
 
     $("#next3").click(function () {
-        $("#notSameMail").css({
-            display: "none"
-        });
-        $("#isSamePass").css({
-            display: "flex"
-        });
+        if (!requireFields([{
+            sel: "#user2",
+            message: "Please enter your new e-mail address.",
+            test: isEmail,
+        }])) {
+            return;
+        }
+        navTo("isSamePass");
     });
 
     $("#yesPass").click(function () {
         flag_isPassSame = true;
-        $("#isSamePass").css({
-            display: "none"
-        });
-        $("#enterPass").css({
-            display: "flex"
-        });
+        navTo("enterPass");
         $("#password2").css({
             display: "none"
         });
@@ -495,12 +613,8 @@ $(document).ready(function () {
     });
 
     $("#noPass").click(function () {
-        $("#isSamePass").css({
-            display: "none"
-        });
-        $("#enterPass").css({
-            display: "flex"
-        });
+        flag_isPassSame = false;
+        navTo("enterPass");
         $("#password2").css({
             display: "inline-block"
         });
@@ -514,12 +628,22 @@ $(document).ready(function () {
     });
 
     $("#next4").click(function () {
-        $("#enterPass").css({
-            display: "none"
-        });
-        $("#confirmPage").css({
-            display: "flex"
-        });
+        const specs = [{
+            sel: "#password1",
+            message: "Enter the source mailbox password.",
+        }];
+        // password2 is disabled when the user chose "same password", so only
+        // require it when the two mailboxes use different passwords.
+        if (!$("#password2").prop("disabled")) {
+            specs.push({
+                sel: "#password2",
+                message: "Enter the destination mailbox password.",
+            });
+        }
+        if (!requireFields(specs)) {
+            return;
+        }
+        navTo("confirmPage");
         $("#oldM").text($("#user1").val());
         $("#newM").text($("#user2").val());
     });
@@ -863,8 +987,24 @@ $(document).ready(function () {
         });
 
         $("#bt-sync").click(async function () {
+            // Final safety net (Task 4): block submission if the core source or
+            // destination details are missing. Per-step validation normally
+            // prevents reaching here empty; the errors live on earlier cards, so
+            // surface the feedback inline on the confirm step instead.
+            const missing =
+                !isEmail(($("#user1").val() || "").trim()) ||
+                !($("#host1").val() || "").trim() ||
+                !($("#host2").val() || "").trim() ||
+                !($("#password1").val() || "").trim();
+            if (missing) {
+                $("#confirm-error")
+                    .text("Some required details are missing. Use Back to complete every step.")
+                    .removeClass("hidden");
+                return;
+            }
+            $("#confirm-error").addClass("hidden");
+
             const dest = ($("#host2").val() || "").trim();
-            if (!dest) return;
 
             $("#bt-sync").prop("disabled", true);
             const allowed = await isAllowedDestination(dest);
@@ -874,6 +1014,7 @@ $(document).ready(function () {
                 return;
             }
 
+            setBackVisible(false);   // migration started — no going back mid-run
             $("#confirmPage").css({
                 display: "none"
             });

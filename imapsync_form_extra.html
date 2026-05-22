@@ -4,6 +4,20 @@
             <title>Migrate email · Noxity</title>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
+            <script>
+                /* Apply the saved (or system) theme before first paint so there is
+                   no light/dark flash on reload (Task 1 + Task 3). */
+                (function () {
+                    try {
+                        var t = localStorage.getItem("nox-theme");
+                        if (!t) {
+                            t = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)
+                                ? "dark" : "light";
+                        }
+                        document.documentElement.setAttribute("data-theme", t);
+                    } catch (e) { /* localStorage blocked — fall back to light */ }
+                })();
+            </script>
             <script src="https://cdn.tailwindcss.com"></script>
             <link rel="stylesheet" href="imapsync_form.css"/>
             <link rel="license" href="https://imapsync.lamiral.info/NOLIMIT">
@@ -17,6 +31,19 @@
                   crossorigin="anonymous" />
         </head>
         <body>
+            <!-- Fixed top bar: in-page Back button (Task 3) + theme toggle (Task 3).
+                 Back starts hidden via inline style so it never flashes on the first
+                 step; the wizard reveals it once you advance. -->
+            <div id="nav-bar" class="nav-bar">
+                <button type="button" id="bt-back" class="nav-btn" style="display:none"
+                        aria-label="Go back to the previous step">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Back</span>
+                </button>
+                <button type="button" id="bt-theme" class="nav-btn"
+                        aria-label="Switch to dark mode" aria-pressed="false">
+                    <i class="fa-solid fa-moon" aria-hidden="true"></i>
+                </button>
+            </div>
             <header>
                 <span class="nox-eyebrow">Noxity · Mailbox migration</span>
                 <h1>Move your <em>mailbox</em>, no drama.</h1>
@@ -37,9 +64,11 @@
                         
                         <div class="flex flex-row justify-center items-start gap-4 w-full">
                             <div class="flex flex-col w-[300px] gap-2">
-                                <input id="user1" class="text-white rounded-lg p-2 border-2"
-                                    placeholder="source@example.net" name="user1" />
+                                <input id="user1" class="text-white rounded-lg p-2 border-2" type="email"
+                                    autocomplete="email" placeholder="source@example.net" name="user1"
+                                    aria-describedby="user1-error" />
                                 <label for="user1" class="text-gray-500">This is the source mail</label>
+                                <p id="user1-error" class="field-error hidden" role="alert"></p>
                             </div>
                         </div>
                         <button type="button" id="next1" class="border-2 p-2 w-[100px] rounded-lg">Next</button>
@@ -59,14 +88,18 @@
                         </p>
                         <div class="flex flex-col justify-center items-center gap-4 h-full w-full">
                             <div class="flex flex-col w-[300px] gap-2">
-                                <input id="host1" name="host1" class="text-white rounded-lg p-2 border-2" placeholder="Source" />
+                                <input id="host1" name="host1" class="text-white rounded-lg p-2 border-2" placeholder="Source"
+                                    aria-describedby="host1-error" />
                                 <label for="host1" class="text-gray-500">Existing server, ie <i>mail.oldhost.co.uk</i>
                                     or IP Adress</label>
+                                <p id="host1-error" class="field-error hidden" role="alert"></p>
                             </div>
                             <div class="flex flex-col w-[300px] mt-4 gap-2">
-                                <input id="host2" name="host2" class="text-white rounded-lg p-2 border-2" placeholder="Destination" />
+                                <input id="host2" name="host2" class="text-white rounded-lg p-2 border-2" placeholder="Destination"
+                                    aria-describedby="host2-error" />
                                 <label for="host2" class="text-gray-500">New server, ie
                                     <i>mail.example-krystal-server.co.uk</i> or IP Adress</label>
+                                <p id="host2-error" class="field-error hidden" role="alert"></p>
                             </div>
                             <button type="button" id="next2" class="border-2 p-2 w-[100px] rounded-lg">Next</button>
                         </div>
@@ -128,9 +161,11 @@
                         </p>
                         <div class="flex flex-row justify-center items-start gap-4 w-full">
                             <div class="flex flex-col w-[300px] gap-2">
-                                <input id="user2" class="text-white rounded-lg p-2 border-2"
-                                    placeholder="source@example.net" name="user2" />
+                                <input id="user2" class="text-white rounded-lg p-2 border-2" type="email"
+                                    autocomplete="email" placeholder="source@example.net" name="user2"
+                                    aria-describedby="user2-error" />
                                 <label for="user2" class="text-gray-500">This is the destination mail</label>
+                                <p id="user2-error" class="field-error hidden" role="alert"></p>
                             </div>
                         </div>
                         <button type="button" id="next3" class="border-2 p-2 w-[100px] rounded-lg">Next</button>
@@ -180,13 +215,15 @@
                         <div class="flex flex-col justify-center items-center gap-4 w-full">
                             <div class="flex flex-col w-[300px] gap-2">
                                 <input id="password1" name="password1" class="text-white rounded-lg p-2 border-2" placeholder="Source password"
-                                    type="password" />
+                                    type="password" autocomplete="current-password" aria-describedby="password1-error" />
                                 <label id="srcLabel" for="password1" class="text-gray-500">This is for source mail: PRIKAZI MAIL</label>
+                                <p id="password1-error" class="field-error hidden" role="alert"></p>
                             </div>
                             <div class="flex flex-col w-[300px] mt-4 gap-2">
                                 <input id="password2" name="password2" class="text-white rounded-lg p-2 border-2" placeholder="Destination password"
-                                    type="password" />
+                                    type="password" autocomplete="current-password" aria-describedby="password2-error" />
                                 <label id="destLabel" for="password2" class="text-gray-500">This is for destination mail: PRIKAZI MAIL</label>
+                                <p id="password2-error" class="field-error hidden" role="alert"></p>
                             </div>
                             <button type="button" id="next4" class="border-2 p-2 w-[100px] rounded-lg">Next</button>
         
@@ -206,6 +243,7 @@
                         </p>
 
                         <button type="button" id="bt-sync" class="border-2 p-2 w-[200px] h-[50px] rounded-lg">Begin migration</button>
+                        <p id="confirm-error" class="field-error hidden" role="alert"></p>
                         <div id="migrationText" class="text-center text-2xl text-gray-400 italic"> Migrating from SOURCE SERVER to DESTINATION
                             SERVER
                         </div>
@@ -224,7 +262,7 @@
                         </div>
                         <div>
                             <input type="checkbox" id="dry" name="dry" value="check">
-                            <label for="verbose">Verbose</label>
+                            <label for="dry">Verbose</label>
                         </div>
                     </div>
                 </div>
@@ -270,6 +308,11 @@
 
             </div>
 
+
+            <footer class="site-footer">
+                <p>Built on <a href="https://imapsync.lamiral.info/" target="_blank" rel="noopener">imapsync</a>,
+                    created by Gilles Lamiral. <a href="credits.html">Credits &amp; license</a>.</p>
+            </footer>
 
             <script src="https://code.jquery.com/jquery-3.6.0.min.js"
                     integrity="sha384-vtXRMe3mGCbOeY7l30aIg8H9p3GdeSe4IFlP6G8JMa7o7lXvnz3GFKzPxzJdPfGK"

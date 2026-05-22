@@ -57,6 +57,56 @@
 }
 
 /* =============================================================
+   Dark theme (Task 3) — same tokens, inverted ink/paper.
+   Toggled by data-theme="dark" on <html>; the value is applied
+   before first paint by a tiny inline script in the page <head>
+   so there is no light/dark flash on reload.
+   ============================================================= */
+
+[data-theme="dark"] {
+    --nox-ink:        #ECE7DD;
+    --nox-ink-2:      #B4BBCA;
+    --nox-ink-mute:   #8C93A2;
+    --nox-ink-faint:  #6C7382;
+
+    --nox-paper:      #1B2334;
+    --nox-paper-2:    #141A27;
+    --nox-paper-3:    #2A3447;
+
+    /* Dark enough that white button labels stay legible on hover (AA);
+       link/accent text is lifted separately below for small-text contrast. */
+    --nox-crimson:        #C13A59;
+    --nox-crimson-hover:  #D14A68;
+    --nox-crimson-press:  #A82F4C;
+
+    --nox-evergreen:      #8FB995;
+    --nox-evergreen-soft: #233227;
+
+    --nox-mint:       #233227;
+    --nox-pink-soft:  #3A2530;
+
+    --nox-success:    #8FB995;
+    --nox-danger:     #E0697F;
+
+    --nox-line:        rgba(236,231,221,0.12);
+    --nox-line-strong: rgba(236,231,221,0.22);
+    --nox-line-soft:   rgba(236,231,221,0.07);
+
+    --nox-shadow-soft: 0 1px 2px rgba(0,0,0,0.30), 0 8px 24px rgba(0,0,0,0.40);
+    --nox-shadow-card: 0 1px 0 rgba(0,0,0,0.25), 0 12px 32px rgba(0,0,0,0.45);
+}
+
+/* Lift small crimson *text* on dark backgrounds to meet AA contrast.
+   (Buttons keep the darker crimson above so white labels stay legible.) */
+[data-theme="dark"] a,
+[data-theme="dark"] .modal-link,
+[data-theme="dark"] #bt-abort {
+    color: #EE8AA0;
+}
+[data-theme="dark"] #bt-abort { border-color: #EE8AA0 !important; }
+[data-theme="dark"] .modal-steps li::marker { color: #EE8AA0; }
+
+/* =============================================================
    Reset / base
    ============================================================= */
 
@@ -65,6 +115,16 @@
 *::after { box-sizing: border-box; }
 
 html, body { margin: 0; padding: 0; }
+
+/* Flash-on-reload fix (Task 1: CSS visibility).
+   Chosen because the flashing element is not an <img> but the modal overlay
+   and the inactive step cards: Tailwind is loaded from a CDN <script> that
+   injects its `.hidden` utility only after it executes, while this stylesheet
+   is applied first via <link>. For a moment on every reload the modal and all
+   stacked cards paint before Tailwind hides them. Declaring `.hidden` here
+   hides them on the very first paint. No !important, so the inline display the
+   wizard sets when advancing/showing the modal still wins over it. */
+.hidden { display: none; }
 
 body {
     background: var(--nox-paper-2);
@@ -203,11 +263,15 @@ body > header p strong { color: var(--nox-ink); font-weight: 600; }
 .box hr { display: none; }
 
 .box .second {
-    padding: 56px 48px 48px !important;
+    /* Task 2: reduce blank space — trim the step's top padding and the
+       inter-element gap so sparse single-field steps don't read as half-empty.
+       Chosen option: modify CSS spacing (the card height is already auto, so
+       this is the real lever). Multi-element steps still have ample room. */
+    padding: 40px 48px 40px !important;
     margin: 0 !important;
     height: auto !important;
     align-items: center;
-    gap: 28px !important;
+    gap: 20px !important;
 }
 
 .box .second i.fa-2x {
@@ -733,11 +797,119 @@ label[for="verbose"], label[for="dry"] {
 }
 
 /* =============================================================
+   Top navigation bar — back + theme toggle (Task 3)
+   ============================================================= */
+
+.nav-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 500;                 /* under the modal (1000), over the page */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    pointer-events: none;         /* let clicks fall through the empty bar... */
+}
+.nav-bar .nav-btn { pointer-events: auto; }   /* ...but not the buttons */
+
+.nav-btn {
+    appearance: none;
+    -webkit-appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--nox-paper);
+    color: var(--nox-ink);
+    border: 1px solid var(--nox-line-strong);
+    border-radius: var(--nox-radius-pill);
+    padding: 10px 16px;
+    font-family: var(--nox-sans);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: var(--nox-shadow-soft);
+    transition: background 180ms var(--nox-ease), color 180ms var(--nox-ease),
+                border-color 180ms var(--nox-ease), transform 180ms var(--nox-ease);
+}
+.nav-btn:hover {
+    border-color: var(--nox-ink);
+    transform: translateY(-1px);
+}
+.nav-btn:focus-visible {
+    outline: 2px solid var(--nox-crimson);
+    outline-offset: 2px;
+}
+/* Keep the theme toggle pinned right even when Back is hidden (step 1),
+   where it would otherwise be the only flex child and slide left. */
+#bt-theme { padding: 10px 13px; margin-left: auto; }   /* icon-only, keep it square-ish */
+
+/* =============================================================
+   Site footer — license / credit link (Task: credit Lamiral)
+   ============================================================= */
+
+.site-footer {
+    text-align: center;
+    padding: 8px 24px 48px;
+    color: var(--nox-ink-mute);
+    font-family: var(--nox-sans);
+    font-size: 13px;
+    line-height: 1.6;
+}
+.site-footer a {
+    color: var(--nox-ink-2);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+    font-weight: 600;
+}
+.site-footer a:hover { color: var(--nox-crimson); }
+
+/* =============================================================
+   Form validation feedback (Task 4)
+   ============================================================= */
+
+.field-error {
+    color: var(--nox-danger) !important;
+    font-family: var(--nox-sans);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+    margin: 2px 0 0;
+    text-align: left;
+}
+
+.box input.invalid:not([type="checkbox"]):not([type="radio"]) {
+    border-color: var(--nox-danger) !important;
+    box-shadow: 0 0 0 4px rgba(184, 53, 83, 0.14) !important;
+}
+
+#confirm-error { text-align: center; }
+
+/* =============================================================
+   Credits page (built on the same design system)
+   ============================================================= */
+
+.credit-card .second { text-align: center; }
+.credit-card .second p { max-width: 560px; }
+.credit-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px 22px;
+    margin-top: 4px;
+}
+
+/* =============================================================
    Responsive
    ============================================================= */
 
 @media (max-width: 880px) {
-    body > header { padding: 56px 20px 40px; }
+    body > header { padding: 72px 20px 40px; }   /* extra top room for the fixed nav bar */
+    .nav-bar { padding: 12px 14px; }
+    .nav-btn { padding: 9px 14px; font-size: 12px; }
     .box {
         width: 100% !important;
     }
