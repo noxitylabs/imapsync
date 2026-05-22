@@ -608,25 +608,28 @@ body > header p strong { color: var(--nox-ink); font-weight: 600; }
     100% { margin-left: 102%; }
 }
 
-/* Collapsible, tabbed consoles */
+/* Collapsible, folder-style tabbed consoles. The ID-scoped selectors are
+   needed to beat the higher-specificity `#consoleLogs button` primary rule;
+   active tab shares the dark panel colour so it reads as one connected folder. */
 .console-area { width: 100%; }
-.tabs {
+
+#consoleLogs .tabs {
     display: flex;
-    gap: 2px;
+    gap: 4px;
     flex-wrap: wrap;
-    margin-bottom: 12px;
-    border-bottom: 1px solid var(--nox-line);
+    margin: 0;
+    padding: 0 0 0 6px;
 }
-.tabs .tab {
+#consoleLogs .tabs .tab {
     appearance: none;
     -webkit-appearance: none;
-    background: transparent !important;
-    color: var(--nox-ink-2) !important;
-    border: 0 !important;
-    border-bottom: 2px solid transparent !important;
-    border-radius: 0 !important;
-    padding: 10px 14px !important;
-    margin-bottom: -1px;
+    background: #232C3B !important;
+    color: #9BA3B2 !important;
+    border: 1px solid rgba(247, 245, 240, 0.10) !important;
+    border-bottom: none !important;
+    border-radius: 9px 9px 0 0 !important;
+    padding: 9px 16px !important;
+    margin: 0 !important;
     font-family: var(--nox-sans) !important;
     font-size: 13px !important;
     font-weight: 600 !important;
@@ -634,31 +637,37 @@ body > header p strong { color: var(--nox-ink); font-weight: 600; }
     min-width: 0 !important;
     box-shadow: none !important;
     cursor: pointer;
-    transition: color 160ms var(--nox-ease), border-color 160ms var(--nox-ease);
+    position: relative;
+    z-index: 0;
+    transition: background 160ms var(--nox-ease), color 160ms var(--nox-ease);
 }
-.tabs .tab:hover {
-    background: transparent !important;
-    color: var(--nox-ink) !important;
+#consoleLogs .tabs .tab:hover {
+    background: #2B3547 !important;
+    color: #E8E3DA !important;
     transform: none !important;
     box-shadow: none !important;
 }
-.tabs .tab.tab-active {
-    color: var(--nox-ink) !important;
-    border-bottom-color: var(--nox-crimson) !important;
+#consoleLogs .tabs .tab.tab-active {
+    background: #131A28 !important;   /* matches the panel below = connected */
+    color: #F0EBE2 !important;
+    z-index: 2;
 }
 
 .tab-panel {
     background: #131A28 !important;
     color: #F0EBE2 !important;
-    border: 1px solid var(--nox-line-strong) !important;
-    border-radius: var(--nox-radius-lg) !important;
+    border: 1px solid rgba(247, 245, 240, 0.10) !important;
+    border-radius: 0 var(--nox-radius-lg) var(--nox-radius-lg) var(--nox-radius-lg) !important;
     width: 100% !important;
     height: 280px !important;
     overflow: auto;
+    margin-top: -1px;          /* tuck under the tab row so the active tab joins it */
     padding: 16px 18px !important;
     font-family: var(--nox-mono);
     font-size: 12px;
     line-height: 1.7;
+    position: relative;
+    z-index: 1;
 }
 
 #abort, #console, #output {
@@ -714,7 +723,7 @@ body > header p strong { color: var(--nox-ink); font-weight: 600; }
     box-shadow: var(--nox-shadow-card);
     width: 800px !important;
     max-width: 100%;
-    margin: 0 auto !important;
+    margin: auto !important;     /* center vertically in the leftover space too */
     padding: 32px !important;
     gap: 20px !important;
 }
@@ -1086,6 +1095,7 @@ label[for="verbose"], label[for="dry"] {
     -webkit-appearance: none;
     display: inline-flex;
     align-items: center;
+    justify-content: center;   /* center the arrow + label within the button */
     gap: 8px;
     background: transparent !important;
     color: var(--nox-ink) !important;

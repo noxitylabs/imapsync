@@ -353,6 +353,7 @@ $(document).ready(function () {
         const toId = navStack.pop();
         $("#form > .box:visible").css({ display: "none" });
         $("#" + toId).css({ display: "flex" });
+        clearAllFieldErrors();
     });
 
     /* ===== Theme switcher (Task 3) ===================================== */
@@ -403,6 +404,14 @@ $(document).ready(function () {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
     };
 
+    // IP addresses force an unencrypted connection, so we require hostnames.
+    const isIpAddress = function isIpAddress(v) {
+        return IPV4_RE.test(v) || v.indexOf(":") !== -1; // IPv4 or IPv6
+    };
+    const isHostname = function isHostname(v) {
+        return /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(v);
+    };
+
     const setFieldValidity = function setFieldValidity(sel, valid, message) {
         const $f = $(sel);
         const $err = $("#" + $f.attr("id") + "-error");
@@ -431,6 +440,17 @@ $(document).ready(function () {
             $(firstBad).trigger("focus");
         }
         return firstBad === null;
+    };
+
+    // Wipe any visible field errors (used when navigating between steps so a
+    // stale red message never carries over to a step you've returned to).
+    const clearAllFieldErrors = function clearAllFieldErrors() {
+        ["#user1", "#user2", "#host1", "#host2", "#password1", "#password2"].forEach(
+            function (sel) {
+                setFieldValidity(sel, true);
+            }
+        );
+        $("#confirm-error").addClass("hidden");
     };
 
     // Clear a field's error as soon as the user types something into it.
@@ -540,13 +560,26 @@ $(document).ready(function () {
         );
     };
 
-    $("#form").on("submit", function (e) {
-        e.preventDefault();
+    const advanceVisibleStep = function advanceVisibleStep() {
         if ($("#tos-modal").is(":visible")) {
             $("#modal-btn-ok").click();
             return;
         }
         $("#form > .box:visible").find("button[id^='next'], #bt-sync").first().click();
+    };
+
+    $("#form").on("submit", function (e) {
+        e.preventDefault();
+        advanceVisibleStep();
+    });
+
+    // The form has no submit button, so Enter never fires a native submit.
+    // Wire it explicitly so Enter advances the step through our own validation.
+    $("#form").on("keydown", "input", function (e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            advanceVisibleStep();
+        }
     });
 
     $("#next1").click(async function () {
@@ -581,11 +614,33 @@ $(document).ready(function () {
         }
     });
 
+    const checkHost = function checkHost(sel, role) {
+        const v = ($(sel).val() || "").trim();
+        if (!v) {
+            return setFieldValidity(sel, false, "Enter the " + role + " server hostname.");
+        }
+        if (isIpAddress(v)) {
+            return setFieldValidity(
+                sel,
+                false,
+                "Use a hostname like mail.yourdomain.com, not an IP address — IP connections aren't encrypted."
+            );
+        }
+        if (!isHostname(v)) {
+            return setFieldValidity(
+                sel,
+                false,
+                "That doesn't look like a server hostname (e.g. mail.yourdomain.com)."
+            );
+        }
+        return setFieldValidity(sel, true);
+    };
+
     $("#next2").click(function () {
-        if (!requireFields([
-            { sel: "#host1", message: "Enter the source server hostname or IP." },
-            { sel: "#host2", message: "Enter the destination server hostname or IP." },
-        ])) {
+        const okSrc = checkHost("#host1", "source");
+        const okDest = checkHost("#host2", "destination");
+        if (!okSrc || !okDest) {
+            $(okSrc ? "#host2" : "#host1").trigger("focus");
             return;
         }
         navTo("isSameMail");
@@ -1151,6 +1206,11 @@ $(document).ready(function () {
             }
 
             $("#confirmPage").css({
+                display: "none"
+            });
+            // Hide the (now-empty) form so #consoleLogs centers on its own
+            // instead of sharing the vertical space with an empty form.
+            $("#form").css({
                 display: "none"
             });
             $("#consoleLogs").css({

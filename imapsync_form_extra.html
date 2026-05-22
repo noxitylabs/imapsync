@@ -45,7 +45,7 @@
                 <p>Copy a <strong>complete mailbox</strong> from one IMAP server to another &mdash; folders, flags, and dates intact, without <strong>duplicates</strong>.</p>
             </header>
             <div id="main" class="flex flex-col justify-center items-center">
-                <form id="form" action="/cgi-bin/imapsync" method="post" autocomplete="on">
+                <form id="form" action="/cgi-bin/imapsync" method="post" autocomplete="on" novalidate>
                <div id="start" class="box flex flex-col m-0 p-0 rounded-lg border-4 h-[600px] w-[800px]">
                     <div class="first flex justify-start items-center">
                         <div class="text-2xl pl-4 py-2 h-full">Start an e-mail migration</div>
@@ -85,8 +85,7 @@
                             <div class="flex flex-col w-[300px] gap-2">
                                 <input id="host1" name="host1" class="text-white rounded-lg p-2 border-2" placeholder="Source"
                                     aria-describedby="host1-hint host1-error" />
-                                <label for="host1" class="text-gray-500">Existing server, ie <i>mail.oldhost.co.uk</i>
-                                    or IP Adress</label>
+                                <label for="host1" class="text-gray-500">Existing server, ie <i>mail.yourdomain.com</i></label>
                                 <p id="host1-hint" class="field-hint hidden" role="status">
                                     <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
                                     <span id="host1-hint-text"></span>
@@ -96,8 +95,7 @@
                             <div class="flex flex-col w-[300px] mt-4 gap-2">
                                 <input id="host2" name="host2" class="text-white rounded-lg p-2 border-2" placeholder="Destination"
                                     aria-describedby="host2-error" />
-                                <label for="host2" class="text-gray-500">New server, ie
-                                    <i>mail.example-krystal-server.co.uk</i> or IP Adress</label>
+                                <label for="host2" class="text-gray-500">New server, ie <i>mail.yourdomain.com</i></label>
                                 <p id="host2-error" class="field-error hidden" role="alert"></p>
                             </div>
                             <div class="btn-row">
@@ -361,7 +359,7 @@
 
             <footer class="site-footer">
                 <p>Built on <a href="https://imapsync.lamiral.info/" target="_blank" rel="noopener">imapsync</a>,
-                    created by Gilles Lamiral. <a href="credits.html">Credits &amp; license</a>.</p>
+                    created by Gilles Lamiral. <a href="credits.html" target="_blank" rel="noopener">Credits &amp; license</a>.</p>
             </footer>
 
             <script src="https://code.jquery.com/jquery-3.6.0.min.js"
