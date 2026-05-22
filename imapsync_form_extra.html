@@ -297,35 +297,56 @@
                 </div>
                 </form>
                 
-                <div id="consoleLogs" class="box flex flex-col items-center justify-center m-0 p-0 rounded-lg border-4 gap-4 p-4 hidden">
-                    <!-- PROGRESS BAR-->
-                    <div class="w-full bg-gray-200 rounded-full h-4">
-                        <div id="progress-bar-done" class="bg-green-500 h-4 rounded-full" style="width: 30%"></div>
-                    </div>
-                    <!-- PROGRESS BAR-->
-                    <div class="flex flex-row gap-2">
-                        <button class="border-2 p-2 w-[200px] h-[50px] rounded-lg" id="toggleConsole" type="button">Show
-                            consoles/logs</button>
-                        <button class="border-2 p-2 w-[200px] h-[50px] rounded-lg" id="bt-abort" type="button">Stop
-                            Sync</button>
-                    </div>
-        
-                    <div class="consoles flex flex-col justify-center items-center gap-4">
-                        <div id="consoleStop">
-                            <h2 class="text-center">Console of Stopping</h2>
-                            <div id="abort">
-                            </div>
+                <div id="consoleLogs" class="box flex flex-col items-stretch m-0 p-0 rounded-lg border-4 gap-4 p-4 hidden">
+                    <!-- Progress summary: % done, ETA, and e-mail count (parsed from the log) -->
+                    <div class="progress-head">
+                        <div class="progress-head-main">
+                            <span id="progress-percent" class="progress-percent">0%</span>
+                            <span id="progress-eta" class="progress-eta">Starting migration…</span>
                         </div>
-                        <div id="consoleLaunch">
-                            <h2 class="text-center">Console of imapsync launch</h2>
+                        <span id="progress-msgs" class="progress-msgs">Preparing…</span>
+                    </div>
+
+                    <div class="w-full">
+                        <div id="progress-bar-done" style="width:0%" role="progressbar"
+                            aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+                            aria-label="Migration progress"></div>
+                    </div>
+
+                    <div class="flex flex-row gap-2 justify-center">
+                        <button class="border-2 p-2 rounded-lg" id="toggleConsole" type="button"
+                            aria-expanded="false" aria-controls="console-area">Show logs</button>
+                        <button class="border-2 p-2 rounded-lg" id="bt-abort" type="button">Stop migration</button>
+                    </div>
+
+                    <!-- Logs/consoles: hidden until "Show logs", then tabbed (not stacked) -->
+                    <div id="console-area" class="console-area hidden">
+                        <div class="tabs" role="tablist" aria-label="Migration consoles">
+                            <button type="button" class="tab tab-active" data-tab="log" role="tab" aria-selected="true">Migration log</button>
+                            <button type="button" class="tab" data-tab="launch" role="tab" aria-selected="false">Connection</button>
+                            <button type="button" class="tab" data-tab="stop" role="tab" aria-selected="false">Stop</button>
+                        </div>
+                        <div id="log" class="tab-panel" data-tab="log" role="tabpanel">
+                            <div id="output"></div>
+                        </div>
+                        <div id="consoleLaunch" class="tab-panel hidden" data-tab="launch" role="tabpanel">
                             <div id="console"></div>
-        
                         </div>
-                        <div id="log">
-                            <h2 id="imapsync_log_beginning" class="text-center scripton">Log of imapsync run</h2>
-                            <div id="output">
-                            </div>
+                        <div id="consoleStop" class="tab-panel hidden" data-tab="stop" role="tabpanel">
+                            <div id="abort"></div>
                         </div>
+                    </div>
+
+                    <!-- Completion panel: shown when the sync finishes -->
+                    <div id="sync-done" class="sync-done" style="display:none">
+                        <i id="sync-done-icon" class="fa-solid fa-circle-check sync-done-icon" aria-hidden="true"></i>
+                        <p id="sync-done-title" class="sync-done-title">Migration complete</p>
+                        <p id="sync-done-sub" class="sync-done-sub">All your e-mail has been copied across — folders, flags, and dates intact.</p>
+                        <div class="btn-row">
+                            <button type="button" id="bt-artifact">Sync artifact messages</button>
+                            <button type="button" id="bt-startover" class="btn-back">Start over</button>
+                        </div>
+                        <p id="artifact-hint" class="sync-done-hint">Artifact messages are e-mails that may have been missed or that arrived <em>during</em> the migration. We'll run one more pass using the details you already entered.</p>
                     </div>
                 </div>
 

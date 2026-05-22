@@ -753,39 +753,118 @@ $(document).ready(function () {
         is("2.69", eta_obj.percent_left(), "decompose_eta_line: percent_left");
     };
 
+    let migrationAborted = false;
+    let lastEta = null;
+
+    const fmtInt = function fmtInt(n) {
+        const v = Number(n);
+        return isFinite(v) ? v.toLocaleString() : String(n);
+    };
+
+    // Human-readable time from imapsync's "ETA seconds" value.
+    const format_eta = function format_eta(seconds) {
+        const s = parseInt(seconds, 10);
+        if (!isFinite(s) || s < 0) {
+            return "";
+        }
+        if (s < 60) {
+            return "~" + s + " sec left";
+        }
+        const m = Math.round(s / 60);
+        if (m < 60) {
+            return "~" + m + " min left";
+        }
+        const h = Math.floor(s / 3600);
+        const mm = Math.round((s % 3600) / 60);
+        return "~" + h + " h " + mm + " min left";
+    };
+
     const progress_bar_update = function progress_bar_update(eta_obj) {
         if (eta_obj.str.length) {
             $("#progress-bar-done")
+                .removeClass("indeterminate")
                 .css("width", eta_obj.percent_done() + "%")
-                .attr("aria-valuenow", eta_obj.percent_done());
+                .attr("aria-valuenow", Math.round(Number(eta_obj.percent_done())));
         }
     };
 
     const refreshLog = function refreshLog(xhr) {
         const eta_obj = extract_eta(xhr);
+        const hasEta = Boolean(eta_obj.str && eta_obj.str.length);
+        if (hasEta) {
+            lastEta = eta_obj;
+        }
 
         progress_bar_update(eta_obj);
 
         if (xhr.readyState === 4) {
-            // end of sync
-            $("#progress-txt").text(
-                "Ended. It remains " +
-                    eta_obj.msgs_left +
-                    " messages to be synced"
-            );
-
+            // Finished — the completion UI is handled by showSyncComplete().
             $("#output").text(xhr.responseText);
-        } else {
-            let eta_str =
-                eta_obj.str +
-                " (refresh done every " +
-                refresh_interval_s +
-                " s)";
-            eta_str = eta_str.replaceAll(/[\r\n]/g, "");
-            $("#progress-txt").text(eta_str);
-            const last_lines = last_x_lines(xhr.responseText.slice(-2000), -10);
-            $("#output").text(last_lines);
+            return;
         }
+
+        if (hasEta) {
+            $("#progress-percent").text(
+                Math.round(Number(eta_obj.percent_done())) + "%"
+            );
+            $("#progress-eta").text(
+                format_eta(eta_obj.seconds_left) || "Estimating time…"
+            );
+            $("#progress-msgs").text(
+                fmtInt(eta_obj.msgs_done()) +
+                    " of " +
+                    fmtInt(eta_obj.msgs_total) +
+                    " e-mails copied"
+            );
+        } else {
+            $("#progress-bar-done").addClass("indeterminate");
+            $("#progress-percent").text("…");
+            $("#progress-eta").text("Starting migration…");
+            $("#progress-msgs").text("Connecting and counting messages…");
+        }
+        const last_lines = last_x_lines(xhr.responseText.slice(-2000), -10);
+        $("#output").text(last_lines);
+    };
+
+    const showSyncComplete = function showSyncComplete() {
+        // Collapse the console if the user had opened it.
+        $("#console-area").addClass("hidden");
+        $("#toggleConsole").text("Show logs").attr("aria-expanded", "false");
+        $("#bt-abort").addClass("hidden");
+
+        if (migrationAborted) {
+            $("#progress-eta").text("Migration stopped");
+            $("#sync-done-icon").attr("class", "fa-solid fa-circle-xmark sync-done-icon stopped");
+            $("#sync-done-title").text("Migration stopped");
+            $("#sync-done-sub").text(
+                "You stopped the migration. Nothing was deleted on either side — you can resume where it left off or start over."
+            );
+            $("#bt-artifact").text("Resume migration");
+            $("#artifact-hint").addClass("hidden");
+        } else {
+            $("#progress-bar-done")
+                .removeClass("indeterminate")
+                .css("width", "100%")
+                .attr("aria-valuenow", 100);
+            $("#progress-percent").text("100%");
+            $("#progress-eta").text("Migration complete");
+            if (lastEta && lastEta.str) {
+                $("#progress-msgs").text(
+                    fmtInt(lastEta.msgs_total) +
+                        " of " +
+                        fmtInt(lastEta.msgs_total) +
+                        " e-mails copied"
+                );
+            }
+            $("#sync-done-icon").attr("class", "fa-solid fa-circle-check sync-done-icon");
+            $("#sync-done-title").text("Migration complete");
+            $("#sync-done-sub").text(
+                "All your e-mail has been copied across — folders, flags, and dates intact."
+            );
+            $("#bt-artifact").text("Sync artifact messages");
+            $("#artifact-hint").removeClass("hidden");
+        }
+        $("#sync-done").css({ display: "flex" });
     };
 
     const handleRun = function handleRun(xhr, timerRefreshLog) {
@@ -800,14 +879,29 @@ $(document).ready(function () {
                 "\n"
         );
 
+        if (xhr.readyState === 3) {
+            refreshLog(xhr); // live update as the log streams in
+        }
+
         if (xhr.readyState === 4) {
             clearInterval(timerRefreshLog);
             refreshLog(xhr); // a last time
             $("#bt-sync").prop("disabled", false);
+            showSyncComplete();
         }
     };
 
     const imapsync = function imapsync() {
+        // Fresh run: reset completion/abort state and the progress header.
+        migrationAborted = false;
+        lastEta = null;
+        $("#sync-done").css({ display: "none" });
+        $("#bt-abort").removeClass("hidden").prop("disabled", false);
+        $("#progress-percent").text("…");
+        $("#progress-eta").text("Starting migration…");
+        $("#progress-msgs").text("Connecting…");
+        $("#progress-bar-done").addClass("indeterminate").css("width", "30%");
+
         let querystring = $("#form").serialize();
         $("#abort").text("\n\n");
         $("#output").text("Here comes the log!\n\n");
@@ -1063,15 +1157,57 @@ $(document).ready(function () {
                 display: "flex"
             });
             $("#bt-abort").prop("disabled", false);
-            $("#progress-txt").text("ETA: coming soon");
             store_form();
             imapsync();
         });
 
         $("#bt-abort").click(function () {
+            migrationAborted = true;
             $("#bt-sync").prop("disabled", true);
             $("#bt-abort").prop("disabled", true);
             abort();
+        });
+
+        // Collapsible logs
+        $("#toggleConsole").click(function () {
+            const $area = $("#console-area");
+            const show = $area.hasClass("hidden");
+            $area.toggleClass("hidden", !show);
+            $(this)
+                .text(show ? "Hide logs" : "Show logs")
+                .attr("aria-expanded", show ? "true" : "false");
+        });
+
+        // Tabbed consoles
+        $(".tabs .tab").click(function () {
+            const tab = $(this).attr("data-tab");
+            $(".tabs .tab").removeClass("tab-active").attr("aria-selected", "false");
+            $(this).addClass("tab-active").attr("aria-selected", "true");
+            $(".tab-panel").addClass("hidden");
+            $(".tab-panel[data-tab='" + tab + "']").removeClass("hidden");
+        });
+
+        // Second pass — catches messages missed or delivered during the first
+        // run (imapsync is idempotent; re-running only copies what's new). Reuses
+        // the credentials already in the form.
+        $("#bt-artifact").click(function () {
+            $("#sync-done").css({ display: "none" });
+            $("#bt-sync").prop("disabled", true);
+            imapsync();
+        });
+
+        // Start over — clear stored values and return to step 1.
+        $("#bt-startover").click(function () {
+            [
+                "#user1", "#password1", "#host1", "#user2", "#password2", "#host2",
+                "#dry", "#subfolder1", "#subfolder2", "#justlogin", "#justfolders",
+                "#justfoldersizes", "#showpassword1", "#showpassword2",
+            ].forEach(function (id) {
+                try {
+                    localStorage.removeItem(id);
+                } catch (e) { /* ignore */ }
+            });
+            window.location.reload();
         });
 
         const swap = function swap(p1, p2) {

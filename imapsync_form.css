@@ -562,42 +562,149 @@ body > header p strong { color: var(--nox-ink); font-weight: 600; }
    Console / log boxes
    ============================================================= */
 
-#consoleStop,
-#consoleLaunch,
-#log {
+/* Progress summary above the bar */
+.progress-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px 20px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+.progress-head-main {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.progress-percent {
+    font-family: var(--nox-sans);
+    font-weight: 700;
+    font-size: 34px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--nox-ink);
+}
+.progress-eta {
+    font-family: var(--nox-serif);
+    font-style: italic;
+    font-size: 17px;
+    color: var(--nox-ink-2);
+}
+.progress-msgs {
+    font-family: var(--nox-mono);
+    font-size: 13px;
+    color: var(--nox-ink-2);
+    white-space: nowrap;
+}
+
+/* Indeterminate bar until imapsync emits the first ETA line */
+#progress-bar-done.indeterminate {
+    width: 30% !important;
+    animation: nox-indet 1.15s var(--nox-ease) infinite;
+}
+@keyframes nox-indet {
+    0%   { margin-left: -32%; }
+    100% { margin-left: 102%; }
+}
+
+/* Collapsible, tabbed consoles */
+.console-area { width: 100%; }
+.tabs {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--nox-line);
+}
+.tabs .tab {
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent !important;
+    color: var(--nox-ink-2) !important;
+    border: 0 !important;
+    border-bottom: 2px solid transparent !important;
+    border-radius: 0 !important;
+    padding: 10px 14px !important;
+    margin-bottom: -1px;
+    font-family: var(--nox-sans) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    min-width: 0 !important;
+    box-shadow: none !important;
+    cursor: pointer;
+    transition: color 160ms var(--nox-ease), border-color 160ms var(--nox-ease);
+}
+.tabs .tab:hover {
+    background: transparent !important;
+    color: var(--nox-ink) !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+.tabs .tab.tab-active {
+    color: var(--nox-ink) !important;
+    border-bottom-color: var(--nox-crimson) !important;
+}
+
+.tab-panel {
     background: #131A28 !important;
     color: #F0EBE2 !important;
     border: 1px solid var(--nox-line-strong) !important;
     border-radius: var(--nox-radius-lg) !important;
-    width: 720px !important;
-    max-width: 100%;
-    height: 360px !important;
+    width: 100% !important;
+    height: 280px !important;
     overflow: auto;
-    margin-bottom: 20px !important;
-    padding: 20px 24px !important;
+    padding: 16px 18px !important;
     font-family: var(--nox-mono);
     font-size: 12px;
     line-height: 1.7;
-}
-
-#consoleStop h2,
-#consoleLaunch h2,
-#log h2 {
-    font-family: var(--nox-mono);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: #B8B4AA;
-    margin: 0 0 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid rgba(247,245,240,0.10);
 }
 
 #abort, #console, #output {
     color: #F0EBE2;
     white-space: pre-wrap;
     word-break: break-word;
+}
+
+/* Completion panel (shown when the sync finishes) */
+.sync-done {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    padding: 8px 8px 4px;
+}
+.sync-done-icon { color: var(--nox-evergreen); font-size: 40px; }
+.sync-done-icon.stopped { color: var(--nox-crimson); }
+.sync-done-title {
+    font-family: var(--nox-sans);
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+    color: var(--nox-ink);
+    margin: 0;
+}
+.sync-done-sub {
+    font-family: var(--nox-sans);
+    font-size: 15px;
+    color: var(--nox-ink-2);
+    margin: 0;
+    max-width: 520px;
+}
+.sync-done .btn-row { margin-top: 6px; }
+.sync-done-hint {
+    font-family: var(--nox-sans);
+    font-size: 13px;
+    color: var(--nox-ink-mute);
+    margin: 4px 0 0;
+    max-width: 520px;
+    line-height: 1.5;
+}
+.sync-done-hint em {
+    font-family: var(--nox-serif);
+    font-style: italic;
+    color: var(--nox-ink-2);
 }
 
 #consoleLogs {
@@ -971,8 +1078,10 @@ label[for="verbose"], label[for="dry"] {
     flex-wrap: wrap;
 }
 
-/* Ghost/secondary styling; .box .btn-back beats the primary .box button rule. */
-.box .btn-back {
+/* Ghost/secondary styling; the #consoleLogs selector is needed to beat the
+   higher-specificity `#consoleLogs button` primary rule for Start over. */
+.box .btn-back,
+#consoleLogs .btn-back {
     appearance: none;
     -webkit-appearance: none;
     display: inline-flex;
@@ -991,7 +1100,8 @@ label[for="verbose"], label[for="dry"] {
     box-shadow: none !important;
     transition: background 180ms var(--nox-ease), border-color 180ms var(--nox-ease), color 180ms var(--nox-ease);
 }
-.box .btn-back:hover {
+.box .btn-back:hover,
+#consoleLogs .btn-back:hover {
     background: var(--nox-paper-3) !important;
     border-color: var(--nox-ink) !important;
     color: var(--nox-ink) !important;
@@ -1024,8 +1134,9 @@ label[for="verbose"], label[for="dry"] {
         width: 100% !important;
     }
     .box .second { padding: 40px 24px 32px !important; }
-    #consoleStop, #consoleLaunch, #log { width: 100% !important; height: 280px !important; }
-    #consoleLogs, #congratsPage { padding: 32px 20px !important; }
+    .tab-panel { height: 240px !important; }
+    #consoleLogs, #congratsPage { padding: 24px 18px !important; }
+    .progress-percent { font-size: 28px; }
     #congratsPage h1 { font-size: 40px; }
 }
 
