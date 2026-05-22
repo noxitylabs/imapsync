@@ -66,6 +66,18 @@ window.NOXITY_SUPPORT = "mailto:support@noxity.io";   // shown on every modal
 
 ---
 
+## Documentation
+
+We keep two sets of docs, each with its own writing guide. Follow the matching
+guide so docs stay consistent:
+
+- **Internal docs** (engineering & support: architecture, runbooks, ops, gotchas)
+  → write them per [`docs/internal-docs-guide.md`](docs/internal-docs-guide.md).
+- **Public docs** (customer knowledgebase: how to migrate, app passwords,
+  troubleshooting) → write them per [`docs/public-docs-guide.md`](docs/public-docs-guide.md).
+
+---
+
 ## Local preview
 
 ```bash
@@ -294,7 +306,7 @@ cache them.
   browser; a determined user can POST straight to `/cgi-bin/imapsync` with any
   destination. Treat it as a guardrail, not a control. If you need real
   enforcement, validate the destination server-side (a wrapper around the CGI, or
-  a patch to imapsync) — see `CLAUDE.md`.
+  a patch to imapsync).
 - **Keep imapsync updated** (`cd /opt/imapsync && git pull && make install && cp
   imapsync /usr/lib/cgi-bin/`). The CGI runs migrations with user-supplied
   credentials; past versions had shell-injection issues that are fixed upstream.
