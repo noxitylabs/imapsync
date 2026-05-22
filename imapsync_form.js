@@ -9,6 +9,34 @@ function last_x_lines(string, num) {
     return string.split(/\r?\n/).slice(num).join("\n");
 }
 
+// Public UI only: strip infrastructure details (server IP, hostname,
+// RAM/load) from the imapsync log before showing it to the customer.
+// The staff /bypass/ UI uses the stock JS and is not affected.
+// Note: this filters the *displayed* console; the raw XHR response is
+// still visible in browser devtools. True suppression would require
+// patching imapsync's shared CGI, which would also affect /bypass/.
+function sanitizeLog(text) {
+    if (undefined === text || null === text) {
+        return "";
+    }
+    // Whole lines that are pure infrastructure detail — drop them entirely.
+    const dropEnv = /^(REMOTE_ADDR|REMOTE_HOST|HTTP_REFERER|HTTP_USER_AGENT|SERVER_SOFTWARE|SERVER_NAME|SERVER_ADDR|SERVER_PORT|SERVER_ADMIN|HTTP_COOKIE) is /;
+    const dropLoad = /^Load (is|on) /;
+    const dropRam = /free GiB of RAM/;          // "with A/B free GiB of RAM, C% used …"
+    return text
+        .split(/\r?\n/)
+        .filter(function (line) {
+            return !dropEnv.test(line) && !dropLoad.test(line) && !dropRam.test(line);
+        })
+        .map(function (line) {
+            // Trim the CGI path + host off the imapsync banner, keep the version:
+            // "Here is imapsync 2.314 /path on host mail.example, a linux system"
+            // becomes "Here is imapsync 2.314."
+            return line.replace(/^(Here is imapsync \S+).*$/, "$1.");
+        })
+        .join("\n");
+}
+
 function last_eta(string) {
     if (undefined === string) {
         return "";
@@ -854,7 +882,7 @@ $(document).ready(function () {
 
         if (xhr.readyState === 4) {
             // Finished — the completion UI is handled by showSyncComplete().
-            $("#output").text(xhr.responseText);
+            $("#output").text(sanitizeLog(xhr.responseText));
             return;
         }
 
@@ -877,7 +905,10 @@ $(document).ready(function () {
             $("#progress-eta").text("Starting migration…");
             $("#progress-msgs").text("Connecting and counting messages…");
         }
-        const last_lines = last_x_lines(xhr.responseText.slice(-2000), -10);
+        const last_lines = last_x_lines(
+            sanitizeLog(xhr.responseText).slice(-2000),
+            -10
+        );
         $("#output").text(last_lines);
     };
 
@@ -975,6 +1006,11 @@ $(document).ready(function () {
             querystring = querystring + "&office2=on";
         }
 
+        // Disable imapsync's CGI heavy-load gate (free-RAM check). The host
+        // has ample swap; exitonload=0 makes the CGI pass --noexitonload so
+        // small-RAM boxes don't get a spurious "Server is on heavy load".
+        querystring = querystring + "&exitonload=0";
+
         const xhr = new XMLHttpRequest();
         const timerRefreshLog = setInterval(function () {
             refreshLog(xhr);
@@ -1005,7 +1041,7 @@ $(document).ready(function () {
         );
 
         if (xhr.readyState === 4) {
-            $("#abort").append(xhr.responseText);
+            $("#abort").append(sanitizeLog(xhr.responseText));
             $("#bt-sync").prop("disabled", false);
             $("#bt-abort").prop("disabled", false);
         }
