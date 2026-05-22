@@ -225,14 +225,26 @@
         
                         <div class="flex flex-col justify-center items-center gap-4 w-full">
                             <div class="flex flex-col w-[300px] gap-2">
-                                <input id="password1" name="password1" class="text-white rounded-lg p-2 border-2" placeholder="Source password"
-                                    type="password" autocomplete="current-password" aria-describedby="password1-error" />
+                                <div class="pw-wrap">
+                                    <input id="password1" name="password1" class="text-white rounded-lg p-2 border-2" placeholder="Source password"
+                                        type="password" autocomplete="current-password" aria-describedby="password1-error" />
+                                    <button type="button" class="pw-toggle" data-target="password1"
+                                        aria-controls="password1" aria-pressed="false" aria-label="Show password">
+                                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                                    </button>
+                                </div>
                                 <label id="srcLabel" for="password1" class="text-gray-500">This is for source mail: PRIKAZI MAIL</label>
                                 <p id="password1-error" class="field-error hidden" role="alert"></p>
                             </div>
                             <div class="flex flex-col w-[300px] mt-4 gap-2">
-                                <input id="password2" name="password2" class="text-white rounded-lg p-2 border-2" placeholder="Destination password"
-                                    type="password" autocomplete="current-password" aria-describedby="password2-error" />
+                                <div class="pw-wrap">
+                                    <input id="password2" name="password2" class="text-white rounded-lg p-2 border-2" placeholder="Destination password"
+                                        type="password" autocomplete="current-password" aria-describedby="password2-error" />
+                                    <button type="button" class="pw-toggle" data-target="password2"
+                                        aria-controls="password2" aria-pressed="false" aria-label="Show password">
+                                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                                    </button>
+                                </div>
                                 <label id="destLabel" for="password2" class="text-gray-500">This is for destination mail: PRIKAZI MAIL</label>
                                 <p id="password2-error" class="field-error hidden" role="alert"></p>
                             </div>

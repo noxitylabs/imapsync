@@ -925,6 +925,40 @@ label[for="verbose"], label[for="dry"] {
     box-shadow: 0 0 0 4px rgba(78, 121, 84, 0.16) !important;
 }
 
+/* Show/hide password — eye button inside the field. */
+.pw-wrap { position: relative; display: block; width: 100%; }
+.box .pw-wrap input { padding-right: 46px !important; }
+.box .pw-toggle {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    min-width: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: var(--nox-radius-sm) !important;
+    color: var(--nox-ink-mute) !important;
+    box-shadow: none !important;
+    cursor: pointer;
+    transition: color 160ms var(--nox-ease);
+}
+.box .pw-toggle:hover {
+    background: transparent !important;
+    color: var(--nox-ink) !important;
+    transform: translateY(-50%) !important;
+    box-shadow: none !important;
+}
+.box .pw-toggle:focus-visible {
+    outline: 2px solid var(--nox-crimson);
+    outline-offset: 2px;
+}
+
 /* =============================================================
    In-step Back button (sits next to the Next/primary action)
    ============================================================= */

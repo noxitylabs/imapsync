@@ -450,6 +450,29 @@ $(document).ready(function () {
         $("#host1-hint").addClass("hidden");
     });
 
+    // Show/hide password (eye icon) — flips the targeted field's type.
+    $(".pw-toggle").click(function () {
+        const $btn = $(this);
+        const input = document.getElementById($btn.attr("data-target"));
+        if (!input) return;
+        const reveal = input.type === "password";
+        input.type = reveal ? "text" : "password";
+        $btn.attr("aria-pressed", reveal ? "true" : "false")
+            .attr("aria-label", reveal ? "Hide password" : "Show password")
+            .find("i")
+            .attr("class", reveal ? "fa-solid fa-eye-slash" : "fa-solid fa-eye");
+    });
+
+    const resetPwToggle = function resetPwToggle(id) {
+        const input = document.getElementById(id);
+        if (input) input.type = "password";
+        $(".pw-toggle[data-target='" + id + "']")
+            .attr("aria-pressed", "false")
+            .attr("aria-label", "Show password")
+            .find("i")
+            .attr("class", "fa-solid fa-eye");
+    };
+
     const refresh_interval_ms = 6000;
     const refresh_interval_s = refresh_interval_ms / 1000;
     const test = {
@@ -592,13 +615,27 @@ $(document).ready(function () {
         }])) {
             return;
         }
+        // This step only shows when the user chose "Different e-mails", so the
+        // destination must not equal the source — a common slip is re-typing the
+        // source address here. Catch it and point them back if they meant "same".
+        const src = ($("#user1").val() || "").trim().toLowerCase();
+        const dest = ($("#user2").val() || "").trim().toLowerCase();
+        if (src && dest === src) {
+            setFieldValidity(
+                "#user2",
+                false,
+                "That's the same as your source e-mail. Enter your new (destination) address, or go Back and choose “Same e-mails”."
+            );
+            $("#user2").trigger("focus");
+            return;
+        }
         navTo("isSamePass");
     });
 
     $("#yesPass").click(function () {
         flag_isPassSame = true;
         navTo("enterPass");
-        $("#password2").css({
+        $("#password2").closest(".pw-wrap").css({
             display: "none"
         });
         $("#destLabel").css({
@@ -619,11 +656,12 @@ $(document).ready(function () {
     $("#noPass").click(function () {
         flag_isPassSame = false;
         navTo("enterPass");
-        $("#password2").css({
-            display: "inline-block"
+        $("#password2").closest(".pw-wrap").css({
+            display: "block"
         });
         $("#password2").prop("disabled", false);
         $("#password2").val("");
+        resetPwToggle("password2");
         $("#password1").off("input");
         const sourceInput = $("#user1").val();
         $("#srcLabel").text("This is for source mail: " + sourceInput);
