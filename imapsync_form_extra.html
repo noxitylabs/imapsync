@@ -31,14 +31,9 @@
                   crossorigin="anonymous" />
         </head>
         <body>
-            <!-- Fixed top bar: in-page Back button (Task 3) + theme toggle (Task 3).
-                 Back starts hidden via inline style so it never flashes on the first
-                 step; the wizard reveals it once you advance. -->
+            <!-- Fixed top bar: theme toggle only. The Back button lives inline
+                 next to each step's primary action (see .btn-row below). -->
             <div id="nav-bar" class="nav-bar">
-                <button type="button" id="bt-back" class="nav-btn" style="display:none"
-                        aria-label="Go back to the previous step">
-                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Back</span>
-                </button>
                 <button type="button" id="bt-theme" class="nav-btn"
                         aria-label="Switch to dark mode" aria-pressed="false">
                     <i class="fa-solid fa-moon" aria-hidden="true"></i>
@@ -89,9 +84,13 @@
                         <div class="flex flex-col justify-center items-center gap-4 h-full w-full">
                             <div class="flex flex-col w-[300px] gap-2">
                                 <input id="host1" name="host1" class="text-white rounded-lg p-2 border-2" placeholder="Source"
-                                    aria-describedby="host1-error" />
+                                    aria-describedby="host1-hint host1-error" />
                                 <label for="host1" class="text-gray-500">Existing server, ie <i>mail.oldhost.co.uk</i>
                                     or IP Adress</label>
+                                <p id="host1-hint" class="field-hint hidden" role="status">
+                                    <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                                    <span id="host1-hint-text"></span>
+                                </p>
                                 <p id="host1-error" class="field-error hidden" role="alert"></p>
                             </div>
                             <div class="flex flex-col w-[300px] mt-4 gap-2">
@@ -101,7 +100,10 @@
                                     <i>mail.example-krystal-server.co.uk</i> or IP Adress</label>
                                 <p id="host2-error" class="field-error hidden" role="alert"></p>
                             </div>
-                            <button type="button" id="next2" class="border-2 p-2 w-[100px] rounded-lg">Next</button>
+                            <div class="btn-row">
+                                <button type="button" class="btn-back"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Back</span></button>
+                                <button type="button" id="next2" class="border-2 p-2 w-[100px] rounded-lg">Next</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -146,6 +148,9 @@
                                 </p>
                             </div>
                         </div>
+                        <div class="btn-row">
+                            <button type="button" class="btn-back"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Back</span></button>
+                        </div>
                     </div>
                 </div>
         
@@ -168,7 +173,10 @@
                                 <p id="user2-error" class="field-error hidden" role="alert"></p>
                             </div>
                         </div>
-                        <button type="button" id="next3" class="border-2 p-2 w-[100px] rounded-lg">Next</button>
+                        <div class="btn-row">
+                            <button type="button" class="btn-back"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Back</span></button>
+                            <button type="button" id="next3" class="border-2 p-2 w-[100px] rounded-lg">Next</button>
+                        </div>
                     </div>
                 </div>
         
@@ -198,6 +206,9 @@
                                 </p>
                             </div>
                         </div>
+                        <div class="btn-row">
+                            <button type="button" class="btn-back"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Back</span></button>
+                        </div>
                     </div>
                 </div>
         
@@ -225,8 +236,11 @@
                                 <label id="destLabel" for="password2" class="text-gray-500">This is for destination mail: PRIKAZI MAIL</label>
                                 <p id="password2-error" class="field-error hidden" role="alert"></p>
                             </div>
-                            <button type="button" id="next4" class="border-2 p-2 w-[100px] rounded-lg">Next</button>
-        
+                            <div class="btn-row">
+                                <button type="button" class="btn-back"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Back</span></button>
+                                <button type="button" id="next4" class="border-2 p-2 w-[100px] rounded-lg">Next</button>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -242,7 +256,10 @@
                         <p class="text-3xl text-center">Confirm the details and start migration
                         </p>
 
-                        <button type="button" id="bt-sync" class="border-2 p-2 w-[200px] h-[50px] rounded-lg">Begin migration</button>
+                        <div class="btn-row">
+                            <button type="button" class="btn-back"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Back</span></button>
+                            <button type="button" id="bt-sync" class="border-2 p-2 w-[200px] h-[50px] rounded-lg">Begin migration</button>
+                        </div>
                         <p id="confirm-error" class="field-error hidden" role="alert"></p>
                         <div id="migrationText" class="text-center text-2xl text-gray-400 italic"> Migrating from SOURCE SERVER to DESTINATION
                             SERVER
@@ -262,7 +279,7 @@
                         </div>
                         <div>
                             <input type="checkbox" id="dry" name="dry" value="check">
-                            <label for="dry">Verbose</label>
+                            <label for="dry">Dry run (test only &mdash; copies nothing)</label>
                         </div>
                     </div>
                 </div>

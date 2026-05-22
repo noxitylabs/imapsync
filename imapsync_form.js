@@ -328,19 +328,14 @@ $(document).ready(function () {
         $("#tos-modal").css({ display: "flex" });
     }
 
-    /* ===== Wizard navigation + Back button (Task 3) ===================== */
+    /* ===== Wizard navigation + Back buttons (Task 3) =================== */
 
-    /* We keep our own step stack rather than the HTML5 History API: this is an
-       in-form, show/hide wizard, so a self-managed stack moves between steps
-       without a refresh and without hijacking the browser's global back button
-       (which should still leave the page). */
+    /* Self-managed step stack rather than the HTML5 History API: this is an
+       in-form, show/hide wizard, so a stack moves between steps without a
+       refresh and without hijacking the browser's global back button. Each step
+       carries its own Back control (.btn-back) next to its primary action; the
+       first step has none, so there's never a back-off-the-form. */
     const navStack = [];
-
-    const setBackVisible = function setBackVisible(visible) {
-        // Toggle via inline display because .nav-btn sets its own display,
-        // so the class-based .hidden rule would not win over it.
-        $("#bt-back").css({ display: visible ? "inline-flex" : "none" });
-    };
 
     const navTo = function navTo(toId) {
         const fromId = $("#form > .box:visible").attr("id");
@@ -349,17 +344,15 @@ $(document).ready(function () {
             $("#" + fromId).css({ display: "none" });
         }
         $("#" + toId).css({ display: "flex" });
-        setBackVisible(navStack.length > 0);
     };
 
-    $("#bt-back").click(function () {
+    $(".btn-back").click(function () {
         if (navStack.length === 0) {
             return;
         }
         const toId = navStack.pop();
         $("#form > .box:visible").css({ display: "none" });
         $("#" + toId).css({ display: "flex" });
-        setBackVisible(navStack.length > 0);
     });
 
     /* ===== Theme switcher (Task 3) ===================================== */
@@ -450,6 +443,12 @@ $(document).ready(function () {
             });
         }
     );
+
+    // Editing the auto-filled host clears its green "we filled this in" cue.
+    $("#host1").on("input", function () {
+        $(this).removeClass("prefilled");
+        $("#host1-hint").addClass("hidden");
+    });
 
     const refresh_interval_ms = 6000;
     const refresh_interval_s = refresh_interval_ms / 1000;
@@ -546,7 +545,12 @@ $(document).ready(function () {
         try {
             const result = await detectProvider(domain);
             if (result.host) {
-                $("#host1").val(result.host);
+                // Mark the auto-filled host green and tell the user to check it.
+                $("#host1").val(result.host).addClass("prefilled");
+                $("#host1-hint-text").text(
+                    "We filled this in from your e-mail provider — please double-check it's correct."
+                );
+                $("#host1-hint").removeClass("hidden");
             }
             showProviderModal(result.kind);
         } catch (e) {
@@ -1014,7 +1018,6 @@ $(document).ready(function () {
                 return;
             }
 
-            setBackVisible(false);   // migration started — no going back mid-run
             $("#confirmPage").css({
                 display: "none"
             });

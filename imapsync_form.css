@@ -158,8 +158,8 @@ hr {
 
 body > header {
     text-align: center;
-    padding: 36px 24px 20px;   /* compact hero so the form fits one screen */
-    max-width: 920px;
+    padding: 40px 24px 16px;   /* compact-ish hero; #main centering balances the rest */
+    max-width: 960px;
     margin: 0 auto;
 }
 
@@ -173,7 +173,7 @@ body > header .nox-eyebrow {
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--nox-ink-2);
-    margin-bottom: 14px;
+    margin-bottom: 16px;
 }
 body > header .nox-eyebrow::before {
     content: "";
@@ -186,11 +186,11 @@ body > header .nox-eyebrow::before {
 body > header h1 {
     font-family: var(--nox-sans);
     font-weight: 700;
-    font-size: clamp(30px, 4vw, 48px);
-    line-height: 1;
+    font-size: clamp(34px, 4.8vw, 60px);
+    line-height: 1.02;
     letter-spacing: -0.04em;
     color: var(--nox-ink);
-    margin: 0 0 10px;
+    margin: 0 0 14px;
     padding: 0;
 }
 
@@ -203,12 +203,12 @@ body > header h1 em {
 }
 
 body > header p {
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1.5;
     color: var(--nox-ink-2);
     margin: 0;
     padding: 0;
-    max-width: 600px;
+    max-width: 620px;
     margin-left: auto;
     margin-right: auto;
 }
@@ -222,12 +222,18 @@ body > header p strong { color: var(--nox-ink); font-weight: 600; }
 #main {
     width: 100%;
     flex: 1 1 auto;
-    /* Top-align (override Tailwind's justify-center) so the tall log view and
-       short windows scroll from the top instead of being clipped; flex:1 fills
-       the viewport so the footer sits at the bottom. */
+    /* Fill the leftover viewport height so the footer sits at the bottom. */
     justify-content: flex-start !important;
     padding: 12px 24px 24px;
 }
+
+/* Vertically center the active view in the leftover space (so there's balanced
+   room above/below the card instead of a dead gap at the bottom). Auto margins
+   collapse to 0 when the content is taller than the space, so the tall log view
+   and short windows scroll from the top instead of being clipped. */
+#form,
+#consoleLogs,
+#congratsPage { margin-block: auto; }
 
 .box {
     background: var(--nox-paper);
@@ -277,11 +283,11 @@ body > header p strong { color: var(--nox-ink); font-weight: 600; }
        inter-element gap so sparse single-field steps don't read as half-empty.
        Chosen option: modify CSS spacing (the card height is already auto, so
        this is the real lever). Multi-element steps still have ample room. */
-    padding: 40px 48px 40px !important;
+    padding: 34px 48px 34px !important;
     margin: 0 !important;
     height: auto !important;
     align-items: center;
-    gap: 20px !important;
+    gap: 16px !important;
 }
 
 .box .second i.fa-2x {
@@ -470,7 +476,7 @@ body > header p strong { color: var(--nox-ink); font-weight: 600; }
     background: var(--nox-paper-2) !important;
     border: 1px solid var(--nox-line) !important;
     border-radius: var(--nox-radius-lg) !important;
-    padding: 36px 28px !important;
+    padding: 26px 24px !important;
     transition: background 200ms var(--nox-ease), border-color 200ms var(--nox-ease), transform 200ms var(--nox-ease), box-shadow 200ms var(--nox-ease);
     cursor: pointer;
 }
@@ -898,6 +904,66 @@ label[for="verbose"], label[for="dry"] {
 
 #confirm-error { text-align: center; }
 
+/* Auto-fill cue: when provider detection pre-fills a host, mark it green and
+   show a "we filled this, double-check it" hint (Task: green bubble). */
+.field-hint {
+    color: var(--nox-evergreen) !important;
+    font-family: var(--nox-sans);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+    margin: 2px 0 0;
+    text-align: left;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+}
+.field-hint i { margin-top: 2px; }
+
+.box input.prefilled:not([type="checkbox"]):not([type="radio"]) {
+    border-color: var(--nox-evergreen) !important;
+    box-shadow: 0 0 0 4px rgba(78, 121, 84, 0.16) !important;
+}
+
+/* =============================================================
+   In-step Back button (sits next to the Next/primary action)
+   ============================================================= */
+
+.btn-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Ghost/secondary styling; .box .btn-back beats the primary .box button rule. */
+.box .btn-back {
+    appearance: none;
+    -webkit-appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent !important;
+    color: var(--nox-ink) !important;
+    border: 1px solid var(--nox-line-strong) !important;
+    border-radius: var(--nox-radius-pill) !important;
+    padding: 14px 24px !important;
+    font-family: var(--nox-sans) !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    cursor: pointer;
+    box-shadow: none !important;
+    transition: background 180ms var(--nox-ease), border-color 180ms var(--nox-ease), color 180ms var(--nox-ease);
+}
+.box .btn-back:hover {
+    background: var(--nox-paper-3) !important;
+    border-color: var(--nox-ink) !important;
+    color: var(--nox-ink) !important;
+    transform: none !important;
+}
+
 /* =============================================================
    Credits page (built on the same design system)
    ============================================================= */
@@ -927,4 +993,19 @@ label[for="verbose"], label[for="dry"] {
     #consoleStop, #consoleLaunch, #log { width: 100% !important; height: 280px !important; }
     #consoleLogs, #congratsPage { padding: 32px 20px !important; }
     #congratsPage h1 { font-size: 40px; }
+}
+
+/* Short viewports: auto-compact the hero and cards so the content-heavy steps
+   still fit one screen without scrolling. Tall screens keep the larger hero. */
+@media (max-height: 820px) {
+    body > header { padding: 14px 24px 6px; max-width: 780px; }
+    body > header .nox-eyebrow { margin-bottom: 6px; }
+    body > header h1 { font-size: clamp(24px, 3.2vw, 34px); line-height: 1; margin: 0 0 4px; }
+    body > header p { font-size: 13px; line-height: 1.4; }
+    #main { padding: 8px 24px 12px; }
+    .box .second { padding: 18px 40px 18px !important; gap: 10px !important; }
+    .box .second p.text-3xl { font-size: clamp(20px, 2.4vw, 26px); }
+    .box .second i.fa-2x { font-size: 26px; margin-bottom: 0; }
+    #yesMail, #noMail, #yesPass, #noPass { padding: 16px 18px !important; }
+    .box .btn-back, .box button { padding-top: 11px !important; padding-bottom: 11px !important; }
 }
