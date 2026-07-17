@@ -399,7 +399,7 @@ $(document).ready(function () {
             .attr("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
         $("#bt-theme i").attr(
             "class",
-            dark ? "fa-solid fa-sun" : "fa-solid fa-moon"
+            dark ? "ph-bold ph-sun" : "ph-bold ph-moon"
         );
     };
 
@@ -508,7 +508,7 @@ $(document).ready(function () {
         $btn.attr("aria-pressed", reveal ? "true" : "false")
             .attr("aria-label", reveal ? "Hide password" : "Show password")
             .find("i")
-            .attr("class", reveal ? "fa-solid fa-eye-slash" : "fa-solid fa-eye");
+            .attr("class", reveal ? "ph-bold ph-eye-slash" : "ph-bold ph-eye");
     });
 
     const resetPwToggle = function resetPwToggle(id) {
@@ -518,7 +518,7 @@ $(document).ready(function () {
             .attr("aria-pressed", "false")
             .attr("aria-label", "Show password")
             .find("i")
-            .attr("class", "fa-solid fa-eye");
+            .attr("class", "ph-bold ph-eye");
     };
 
     const refresh_interval_ms = 6000;
@@ -1027,14 +1027,14 @@ $(document).ready(function () {
         if (syncError) {
             $("#progress-bar-done").removeClass("indeterminate");
             $("#progress-eta").text("Migration interrupted");
-            $("#sync-done-icon").attr("class", "fa-solid fa-circle-xmark sync-done-icon stopped");
+            $("#sync-done-icon").attr("class", "ph-bold ph-x-circle sync-done-icon stopped");
             $("#sync-done-title").text("Migration interrupted");
             $("#sync-done-sub").text(syncError);
             $("#bt-artifact").text("Try again");
             $("#artifact-hint").addClass("hidden");
         } else if (migrationAborted) {
             $("#progress-eta").text("Migration stopped");
-            $("#sync-done-icon").attr("class", "fa-solid fa-circle-xmark sync-done-icon stopped");
+            $("#sync-done-icon").attr("class", "ph-bold ph-x-circle sync-done-icon stopped");
             $("#sync-done-title").text("Migration stopped");
             $("#sync-done-sub").text(
                 "You stopped the migration. Nothing was deleted on either side — you can resume where it left off or start over."
@@ -1056,7 +1056,7 @@ $(document).ready(function () {
                         " e-mails copied"
                 );
             }
-            $("#sync-done-icon").attr("class", "fa-solid fa-circle-check sync-done-icon");
+            $("#sync-done-icon").attr("class", "ph-bold ph-check-circle sync-done-icon");
             $("#sync-done-title").text("Migration complete");
             $("#sync-done-sub").text(
                 "All your e-mail has been copied across — folders, flags, and dates intact."

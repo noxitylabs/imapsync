@@ -25,18 +25,18 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link rel="stylesheet"
-              href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-              integrity="sha384-5e2ESR8Ycmos6g3gAKr1Jvwye8sW4U1u/cAKulfVJnkakCcMqhOudbtPnvJ+nbv7"
+              href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css"
+              integrity="sha384-nblAP2mo2pVPyMQZDw9Xy9Cwgs9lowushAYep4w5+Q9kF4Ibf3n0B/gCMVdR+Vqy"
               crossorigin="anonymous" />
     </head>
     <body>
         <div id="nav-bar" class="nav-bar">
             <a href="imapsync_form_extra.html" class="nav-btn" aria-label="Back to the migration form">
-                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Back</span>
+                <i class="ph-bold ph-arrow-left" aria-hidden="true"></i><span>Back</span>
             </a>
             <button type="button" id="bt-theme" class="nav-btn"
                     aria-label="Switch to dark mode" aria-pressed="false">
-                <i class="fa-solid fa-moon" aria-hidden="true"></i>
+                <i class="ph-bold ph-moon" aria-hidden="true"></i>
             </button>
         </div>
 
@@ -54,7 +54,7 @@
                 <hr>
 
                 <div class="second flex flex-col justify-start items-center gap-4">
-                    <i class="fa-solid fa-heart fa-2x"></i>
+                    <i class="ph-bold ph-heart"></i>
                     <p>imapsync is written and maintained by <strong>Gilles Lamiral</strong>. The mailbox
                         copy you just ran &mdash; every folder, flag, and date kept intact, with no
                         duplicates &mdash; is his work. Noxity only wraps it in this guided form.</p>
@@ -82,7 +82,7 @@
                     var dark = theme === "dark";
                     btn.setAttribute("aria-pressed", dark ? "true" : "false");
                     btn.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
-                    btn.querySelector("i").className = dark ? "fa-solid fa-sun" : "fa-solid fa-moon";
+                    btn.querySelector("i").className = dark ? "ph-bold ph-sun" : "ph-bold ph-moon";
                 }
                 apply(document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light");
                 btn.addEventListener("click", function () {

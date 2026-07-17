@@ -1,110 +1,192 @@
 /* =============================================================
    Noxity Imapsync — UI styles
-   Built on Noxity Design System v2 (Metronome-inspired):
-   ink on paper, italic serif accents, mono eyebrows, deep radii.
+   Built on the Noxity Design System v4 (transit-signage):
+   Geist, navy / red / warm cream, flat, hairline-ruled.
+
+   The tokens below are copied verbatim from the design system's
+   tokens/*.css. The system lives on claude.ai, not at a URL this
+   page can @import, so they are inlined rather than linked — keep
+   them in sync with the source rather than editing them here.
+
+   ZONE RULE (the system's, applied to this page): this is a
+   PRODUCT surface, so navy carries the brand — the card signage
+   bars, the progress bar and the step icons are all navy, and red
+   means error/down. Red survives in exactly two other places the
+   system names outright: the primary CTA fill and the hero accent
+   (the header is the one marketing-voice element on the page).
    ============================================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600;700&display=swap');
+
+/* ---- Design system tokens (verbatim from tokens/*.css) ------- */
 
 :root {
-    /* Brand */
-    --nox-ink:        #23375A;
-    --nox-ink-2:      #586581;
-    --nox-ink-mute:   #7A746A;
-    --nox-ink-faint:  #B8B2A6;
+    /* Core */
+    --nx-navy:  #162647;
+    --nx-paper: #F4F0E7;
+    --nx-card:  #FBF9F4;
 
-    --nox-paper:      #F4F0E7;
-    --nox-paper-2:    #EFEBE3;
-    --nox-paper-3:    #E5DFD3;
+    /* Accent — use sparingly */
+    --nx-red:      #B83553;
+    --nx-red-deep: #7E2138;
 
-    --nox-crimson:        #B83553;
-    --nox-crimson-hover:  #9C2A45;
-    --nox-crimson-press:  #7E2138;
+    /* Tertiary: green hosting (eco + operational only) */
+    --nx-green:      #4E7954;
+    --nx-green-deep: #2E5D3B;
+    --nx-green-tint: #E4ECDF;
 
-    --nox-evergreen:      #4E7954;
-    --nox-evergreen-soft: #E4ECDF;
+    /* Status */
+    --nx-status-ok:       #4E7954;
+    --nx-status-degraded: #C28A04;
+    --nx-status-down:     #B83553;
 
-    /* Pastel surfaces (for yes/no choice tiles) */
-    --nox-mint:       #C8DDD0;
-    --nox-pink-soft:  #F4D8DD;
+    /* Text on paper (all derived from navy — not separate colours) */
+    --nx-text:       #162647;
+    --nx-text-muted: rgba(22,38,71,0.62);
+    --nx-text-faint: rgba(22,38,71,0.55);
 
-    --nox-success:    #4E7954;
-    --nox-danger:     #B83553;
+    /* Text on navy */
+    --nx-on-dark:       #FBF9F4;
+    --nx-on-dark-muted: rgba(251,249,244,0.60);
+    --nx-on-dark-faint: rgba(251,249,244,0.42);
 
     /* Hairlines */
-    --nox-line:        rgba(35,55,90,0.10);
-    --nox-line-strong: rgba(35,55,90,0.18);
-    --nox-line-soft:   rgba(35,55,90,0.06);
+    --nx-line:        rgba(22,38,71,0.12);
+    --nx-line-strong: rgba(22,38,71,0.30);
+    --nx-line-dark:   rgba(251,249,244,0.14);
+
+    /* Semantic surface aliases */
+    --nx-surface-page: var(--nx-paper);
+    --nx-surface-card: var(--nx-card);
+    --nx-surface-dark: var(--nx-navy);
+    --nx-cta:          var(--nx-red);
+    --nx-cta-hover:    var(--nx-red-deep);
 
     /* Type */
-    --nox-sans:  'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    --nox-serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
-    --nox-mono:  'JetBrains Mono', ui-monospace, Menlo, monospace;
+    --nx-font:      "Geist", system-ui, -apple-system, sans-serif;
+    --nx-font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", monospace;
 
-    /* Radii */
-    --nox-radius-sm:   8px;
-    --nox-radius-md:   14px;
-    --nox-radius-lg:   20px;
-    --nox-radius-xl:   28px;
-    --nox-radius-pill: 999px;
+    --nx-fw-regular: 400;
+    --nx-fw-medium:  500;
+    --nx-fw-semi:    600;
+    --nx-fw-bold:    700;
+    --nx-fw-black:   800;
 
-    /* Shadows */
-    --nox-shadow-soft: 0 1px 2px rgba(35,55,90,0.04), 0 8px 24px rgba(35,55,90,0.06);
-    --nox-shadow-card: 0 1px 0 rgba(35,55,90,0.04), 0 12px 32px rgba(35,55,90,0.08);
+    --nx-track-display: -0.035em;
+    --nx-track-heading: -0.02em;
+    --nx-track-eyebrow: 0.14em;
+    --nx-track-chip:    0.08em;
+
+    --nx-size-display: 56px;
+    --nx-size-h1:      44px;
+    --nx-size-h2:      36px;
+    --nx-size-h3:      24px;
+    --nx-size-lead:    21px;
+    --nx-size-body:    16px;
+    --nx-size-small:   14px;
+    --nx-size-eyebrow: 13px;
+
+    --nx-lh-display: 0.95;
+    --nx-lh-heading: 1.05;
+    --nx-lh-lead:    1.45;
+    --nx-lh-body:    1.5;
+
+    /* Spacing (4px base) */
+    --nx-space-1:  4px;
+    --nx-space-2:  8px;
+    --nx-space-3:  12px;
+    --nx-space-4:  16px;
+    --nx-space-6:  24px;
+    --nx-space-8:  32px;
+    --nx-space-12: 48px;
+    --nx-space-16: 64px;
+
+    --nx-gutter:    32px;
+    --nx-container: 1200px;
+
+    /* Shape: square by default */
+    --nx-radius:       0;
+    --nx-radius-input: 2px;
+
+    /* Signage bar (station-sign heading motif) */
+    --nx-bar: 8px;
 
     /* Motion */
-    --nox-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+    --nx-dur:  150ms;
+    --nx-ease: ease;
+    --nx-ease-move: cubic-bezier(.4, 0, .1, 1);
+
+    /* The ONE elevation in the system */
+    --nx-shadow-card-hover: 0 18px 34px rgba(22,38,71,0.16);
+
+    /* ---- App-local, derived from the tokens above -----------
+       The console is a full-bleed navy signage panel in both
+       themes; in dark it has to sit *under* the navy card, so it
+       drops to navy × 0.72. Not a new brand colour — navy pushed
+       darker, the way muted text is navy pushed lighter.
+
+       The tab strip sits on the *card*, not on the panel, so an
+       inactive tab has to be opaque navy — a translucent cream
+       would vanish into the cream card. Inactive lifts navy toward
+       cream; active drops to the panel's navy so it reads as one
+       connected folder. */
+    --nox-console:     var(--nx-navy);
+    --nox-console-tab: #323F5C;              /* = navy 88% + card 12% */
+
+    /* Red at text sizes. True --nx-red on paper; lifted on navy (see
+       the dark block) where #B83553 would fail AA. Filled CTAs never
+       use this — cream on true red is already AA. */
+    --nx-red-text: var(--nx-red);
 }
 
+/* ---- Two deliberate departures from the token defaults -------
+   Kept out of the block above so it stays a clean diff against the
+   design system's source. Both stay inside the system's own stated
+   ranges; neither invents a colour.
+
+   1. --nx-text-muted ships at 0.62, which composites to 4.34:1 on
+      the card — under AA for body text, and this page uses it for
+      field labels and running copy. The system documents muted as
+      "0.6–0.7 in use", so we take the accessible end: 0.70 → 5.5:1.
+   2. The inactive console tab label is 11px, where --nx-on-dark-muted
+      (0.60) gives 4.30:1 on the lifted-navy tab. Lift to 0.78 → 6.8:1;
+      active vs inactive is still carried by the background. */
+:root {
+    --nx-text-muted:   rgba(22,38,71,0.70);
+    --nox-tab-label:   rgba(251,249,244,0.78);
+}
+
+::selection { background: var(--nx-red); color: var(--nx-card); }
+
 /* =============================================================
-   Dark theme (Task 3) — same tokens, inverted ink/paper.
-   Toggled by data-theme="dark" on <html>; the value is applied
-   before first paint by a tiny inline script in the page <head>
-   so there is no light/dark flash on reload.
+   Dark theme — the system is a warm LIGHT system and defines no
+   dark palette, but the page ships a theme toggle and that is
+   functionality, not styling. So rather than invent a grey dark
+   mode, "dark" becomes the system's own navy signage panel: navy
+   surfaces, cream on-dark text, cream hairlines. Every value below
+   is an existing --nx-* token; the one derived value is the card
+   tone (navy + 6% cream) needed to separate card from page.
+
+   Toggled by data-theme="dark" on <html>, applied before first
+   paint by the inline script in each page's <head> (no flash).
    ============================================================= */
 
 [data-theme="dark"] {
-    --nox-ink:        #ECE7DD;
-    --nox-ink-2:      #B4BBCA;
-    --nox-ink-mute:   #8C93A2;
-    --nox-ink-faint:  #6C7382;
+    --nx-surface-page: var(--nx-navy);
+    --nx-surface-card: #243351;              /* = navy 94% + card 6% */
 
-    --nox-paper:      #1B2334;
-    --nox-paper-2:    #141A27;
-    --nox-paper-3:    #2A3447;
+    --nx-text:       var(--nx-on-dark);
+    --nx-text-muted: var(--nx-on-dark-muted);
+    --nx-text-faint: var(--nx-on-dark-faint);
 
-    /* Dark enough that white button labels stay legible on hover (AA);
-       link/accent text is lifted separately below for small-text contrast. */
-    --nox-crimson:        #C13A59;
-    --nox-crimson-hover:  #D14A68;
-    --nox-crimson-press:  #A82F4C;
+    --nx-line:        var(--nx-line-dark);
+    --nx-line-strong: rgba(251,249,244,0.30);
 
-    --nox-evergreen:      #8FB995;
-    --nox-evergreen-soft: #233227;
+    --nox-console:     #101B33;              /* = navy × 0.72 */
+    --nox-console-tab: #1E2B45;              /* between the card and the panel */
 
-    --nox-mint:       #233227;
-    --nox-pink-soft:  #3A2530;
-
-    --nox-success:    #8FB995;
-    --nox-danger:     #E0697F;
-
-    --nox-line:        rgba(236,231,221,0.12);
-    --nox-line-strong: rgba(236,231,221,0.22);
-    --nox-line-soft:   rgba(236,231,221,0.07);
-
-    --nox-shadow-soft: 0 1px 2px rgba(0,0,0,0.30), 0 8px 24px rgba(0,0,0,0.40);
-    --nox-shadow-card: 0 1px 0 rgba(0,0,0,0.25), 0 12px 32px rgba(0,0,0,0.45);
+    --nx-red-text: #EE8AA0;                  /* red lifted for AA on navy */
 }
-
-/* Lift small crimson *text* on dark backgrounds to meet AA contrast.
-   (Buttons keep the darker crimson above so white labels stay legible.) */
-[data-theme="dark"] a,
-[data-theme="dark"] .modal-link,
-[data-theme="dark"] #bt-abort {
-    color: #EE8AA0;
-}
-[data-theme="dark"] #bt-abort { border-color: #EE8AA0 !important; }
-[data-theme="dark"] .modal-steps li::marker { color: #EE8AA0; }
 
 /* =============================================================
    Reset / base
@@ -116,23 +198,23 @@
 
 html, body { margin: 0; padding: 0; }
 
-/* Flash-on-reload fix (Task 1: CSS visibility).
-   Chosen because the flashing element is not an <img> but the modal overlay
-   and the inactive step cards: Tailwind is loaded from a CDN <script> that
-   injects its `.hidden` utility only after it executes, while this stylesheet
-   is applied first via <link>. For a moment on every reload the modal and all
-   stacked cards paint before Tailwind hides them. Declaring `.hidden` here
-   hides them on the very first paint. No !important, so the inline display the
+/* Flash-on-reload fix. The flashing elements are the modal overlay
+   and the inactive step cards: Tailwind is loaded from a CDN
+   <script> that injects its `.hidden` utility only after it
+   executes, while this stylesheet is applied first via <link>. For
+   a moment on every reload the modal and all stacked cards paint
+   before Tailwind hides them. Declaring `.hidden` here hides them
+   on the very first paint. No !important, so the inline display the
    wizard sets when advancing/showing the modal still wins over it. */
 .hidden { display: none; }
 
 body {
-    background: var(--nox-paper-2);
-    color: var(--nox-ink);
-    font-family: var(--nox-sans);
-    font-weight: 400;
-    font-size: 16px;
-    line-height: 1.55;
+    background: var(--nx-surface-page);
+    color: var(--nx-text);
+    font-family: var(--nx-font);
+    font-weight: var(--nx-fw-regular);
+    font-size: var(--nx-size-body);
+    line-height: var(--nx-lh-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     /* Fit-one-screen: column layout that fills the viewport so the wizard
@@ -141,24 +223,38 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    transition: background var(--nx-dur) var(--nx-ease);
 }
 
-a { color: var(--nox-crimson); text-decoration: none; }
-a:hover { color: var(--nox-crimson-hover); text-decoration: underline; }
+/* TextLink: underlined navy → red. Scoped to `body a` deliberately —
+   Tailwind's preflight injects `a { text-decoration: inherit }` from a
+   <style> added after this file, so a bare `a` rule ties on specificity
+   and loses. `body a` clears it; .nav-btn still overrides back to none. */
+body a {
+    color: var(--nx-text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+    transition: color var(--nx-dur) var(--nx-ease);
+}
+body a:hover { color: var(--nx-red-text); }
 
 hr {
     border: 0;
-    border-top: 1px solid var(--nox-line);
+    border-top: 1px solid var(--nx-line);
     margin: 0;
 }
 
+/* Phosphor is the one icon set; size it here rather than per-glyph. */
+i[class*="ph-"] { line-height: 1; }
+
 /* =============================================================
-   Header — editorial display
+   Header — the page's one marketing-voice element
    ============================================================= */
 
 body > header {
     text-align: center;
-    padding: 40px 24px 16px;   /* compact-ish hero; #main centering balances the rest */
+    padding: 40px var(--nx-space-6) var(--nx-space-4);
     max-width: 960px;
     margin: 0 auto;
 }
@@ -166,54 +262,53 @@ body > header {
 body > header .nox-eyebrow {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    font-family: var(--nox-mono);
+    gap: var(--nx-space-2);
+    font-family: var(--nx-font-mono);
     font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.14em;
+    font-weight: var(--nx-fw-medium);
+    letter-spacing: var(--nx-track-eyebrow);
     text-transform: uppercase;
-    color: var(--nox-ink-2);
-    margin-bottom: 16px;
+    color: var(--nx-text-muted);
+    margin-bottom: var(--nx-space-4);
 }
+/* Square, not round: the dots in the mark and the status chips are
+   the brand's shape. */
 body > header .nox-eyebrow::before {
     content: "";
     width: 6px;
     height: 6px;
-    border-radius: 50%;
-    background: var(--nox-crimson);
+    background: var(--nx-red);
 }
 
 body > header h1 {
-    font-family: var(--nox-sans);
-    font-weight: 700;
-    font-size: clamp(34px, 4.8vw, 60px);
-    line-height: 1.02;
-    letter-spacing: -0.04em;
-    color: var(--nox-ink);
-    margin: 0 0 14px;
+    font-family: var(--nx-font);
+    font-weight: var(--nx-fw-black);
+    font-size: clamp(34px, 4.8vw, var(--nx-size-display));
+    line-height: var(--nx-lh-display);
+    letter-spacing: var(--nx-track-display);
+    color: var(--nx-text);
+    margin: 0 0 var(--nx-space-3);
     padding: 0;
 }
 
+/* No italic serif — the system is one grotesque all the way down,
+   so the hero accent is carried by colour alone. */
 body > header h1 em {
-    font-family: var(--nox-serif);
-    font-style: italic;
-    font-weight: 400;
-    letter-spacing: -0.01em;
-    color: var(--nox-crimson);
+    font-style: normal;
+    font-weight: inherit;
+    color: var(--nx-red-text);
 }
 
 body > header p {
-    font-size: 16px;
-    line-height: 1.5;
-    color: var(--nox-ink-2);
-    margin: 0;
+    font-size: var(--nx-size-body);
+    line-height: var(--nx-lh-body);
+    color: var(--nx-text-muted);
+    margin: 0 auto;
     padding: 0;
     max-width: 620px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
-body > header p strong { color: var(--nox-ink); font-weight: 600; }
+body > header p strong { color: var(--nx-text); font-weight: var(--nx-fw-semi); }
 
 /* =============================================================
    Main + step cards
@@ -224,7 +319,7 @@ body > header p strong { color: var(--nox-ink); font-weight: 600; }
     flex: 1 1 auto;
     /* Fill the leftover viewport height so the footer sits at the bottom. */
     justify-content: flex-start !important;
-    padding: 12px 24px 24px;
+    padding: var(--nx-space-3) var(--nx-space-6) var(--nx-space-6);
 }
 
 /* Vertically center the active view in the leftover space (so there's balanced
@@ -235,147 +330,150 @@ body > header p strong { color: var(--nox-ink); font-weight: 600; }
 #consoleLogs,
 #congratsPage { margin-block: auto; }
 
+/* The station-sign card: hairline box, square corners, no resting
+   shadow, and the thick top bar — navy because this is product. */
 .box {
-    background: var(--nox-paper);
-    color: var(--nox-ink);
-    border: 1px solid var(--nox-line) !important;
-    border-radius: var(--nox-radius-xl);
-    box-shadow: var(--nox-shadow-card);
+    background: var(--nx-surface-card);
+    color: var(--nx-text);
+    border: 1px solid var(--nx-line) !important;
+    border-top: var(--nx-bar) solid var(--nx-navy) !important;
+    border-radius: var(--nx-radius) !important;
     overflow: hidden;
     width: 800px !important;
     max-width: 100%;
     height: auto !important;
     padding: 0 !important;
     margin: 0 auto !important;
+    transition: background var(--nx-dur) var(--nx-ease),
+                border-color var(--nx-dur) var(--nx-ease);
 }
+[data-theme="dark"] .box { border-top-color: var(--nx-on-dark) !important; }
 
 .box .first {
-    padding: 22px 32px;
-    border-bottom: 1px solid var(--nox-line);
+    padding: var(--nx-space-4) var(--nx-space-8);
+    border-bottom: 1px solid var(--nx-line);
     background: transparent;
 }
 
 .box .first > div {
-    font-family: var(--nox-mono);
+    font-family: var(--nx-font-mono);
     font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.16em;
+    font-weight: var(--nx-fw-medium);
+    letter-spacing: var(--nx-track-eyebrow);
     text-transform: uppercase;
-    color: var(--nox-ink-2);
+    color: var(--nx-text-muted);
     padding: 0 !important;
     height: auto !important;
     display: inline-flex;
     align-items: center;
     gap: 10px;
 }
-.box .first > div::before {
-    content: "";
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--nox-crimson);
-}
 
 .box hr { display: none; }
 
 .box .second {
-    /* Task 2: reduce blank space — trim the step's top padding and the
-       inter-element gap so sparse single-field steps don't read as half-empty.
-       Chosen option: modify CSS spacing (the card height is already auto, so
-       this is the real lever). Multi-element steps still have ample room. */
-    padding: 34px 48px 34px !important;
+    /* Trim the step's top padding and the inter-element gap so sparse
+       single-field steps don't read as half-empty. The card height is
+       already auto, so this is the real lever. */
+    padding: var(--nx-space-8) var(--nx-space-12) !important;
     margin: 0 !important;
     height: auto !important;
     align-items: center;
-    gap: 16px !important;
+    gap: var(--nx-space-4) !important;
 }
 
-.box .second i.fa-2x {
-    color: var(--nox-crimson);
+/* The step icon — navy: on a product surface red would read as an
+   error, so the red on these cards is the CTA and nothing else.
+   32px keeps the weight the old fa-2x icon carried in the layout. */
+.box .second > i {
+    color: var(--nx-text);
     font-size: 32px;
-    margin-bottom: 4px;
+    margin-bottom: var(--nx-space-1);
 }
 
 .box .second p.text-3xl {
-    font-family: var(--nox-sans);
-    font-weight: 700;
-    font-size: clamp(28px, 3vw, 38px);
-    line-height: 1.1;
-    letter-spacing: -0.025em;
-    color: var(--nox-ink);
+    font-family: var(--nx-font);
+    font-weight: var(--nx-fw-bold);
+    font-size: clamp(26px, 3vw, var(--nx-size-h2));
+    line-height: var(--nx-lh-heading);
+    letter-spacing: var(--nx-track-heading);
+    color: var(--nx-text);
     max-width: 580px;
     margin: 0;
 }
 
+/* The question's emphasis: a red signage underline rather than a
+   colour swap, so the heading stays navy and readable. */
 .box .second p.text-3xl u {
-    text-decoration: none;
-    font-family: var(--nox-serif);
-    font-style: italic;
-    font-weight: 400;
-    color: var(--nox-crimson);
-    letter-spacing: -0.005em;
+    text-decoration: underline;
+    text-decoration-color: var(--nx-red);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
 }
 
 .box .second p.text-3xl.underline,
 .box .second p.text-2xl,
 .box .second p {
-    color: var(--nox-ink);
+    color: var(--nx-text);
 }
 
 /* =============================================================
-   Inputs
+   Inputs — the one place a radius exists (2px)
    ============================================================= */
 
 .box input[type="text"],
 .box input[type="password"],
 .box input:not([type="checkbox"]):not([type="radio"]) {
-    background: var(--nox-paper-2) !important;
-    color: var(--nox-ink) !important;
-    border: 1px solid var(--nox-line-strong) !important;
-    border-radius: var(--nox-radius-md) !important;
-    padding: 14px 16px !important;
-    font-family: var(--nox-sans);
+    background: var(--nx-surface-page) !important;
+    color: var(--nx-text) !important;
+    border: 1px solid var(--nx-line-strong) !important;
+    border-radius: var(--nx-radius-input) !important;
+    padding: var(--nx-space-3) var(--nx-space-4) !important;
+    font-family: var(--nx-font);
     font-size: 15px;
-    font-weight: 500;
+    font-weight: var(--nx-fw-medium);
     line-height: 1.4;
-    transition: border-color 180ms var(--nox-ease), box-shadow 180ms var(--nox-ease), background 180ms var(--nox-ease);
+    transition: border-color var(--nx-dur) var(--nx-ease),
+                background var(--nx-dur) var(--nx-ease);
     outline: none;
     width: 100%;
 }
 
 .box input::placeholder {
-    color: var(--nox-ink-mute);
-    font-weight: 400;
+    color: var(--nx-text-faint);
+    font-weight: var(--nx-fw-regular);
     opacity: 1;
 }
 
 .box input:hover:not([type="checkbox"]) {
-    border-color: var(--nox-ink-2) !important;
+    border-color: var(--nx-text) !important;
 }
 
 .box input:focus:not([type="checkbox"]) {
-    border-color: var(--nox-ink) !important;
-    background: var(--nox-paper) !important;
-    box-shadow: 0 0 0 4px rgba(35,55,90,0.08);
+    border-color: var(--nx-text) !important;
+    background: var(--nx-surface-card) !important;
+    box-shadow: inset 0 0 0 1px var(--nx-text);
 }
 
 .box label {
-    font-family: var(--nox-sans);
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--nox-ink-mute) !important;
-    line-height: 1.5;
+    font-family: var(--nx-font);
+    font-size: var(--nx-size-small);
+    font-weight: var(--nx-fw-medium);
+    color: var(--nx-text-muted) !important;
+    line-height: var(--nx-lh-body);
 }
 
+/* Server names are technical → mono, per the system. */
 .box label i {
-    font-style: italic;
-    font-family: var(--nox-serif);
-    color: var(--nox-ink-2);
-    font-weight: 400;
+    font-family: var(--nx-font-mono);
+    font-style: normal;
+    font-size: 13px;
+    color: var(--nx-text);
 }
 
 /* =============================================================
-   Buttons — primary CTA: ink, crimson hover
+   Buttons — primary CTA is red, secondary is a ghost that fills
+   navy. Square, flat, no shadow. Hover must be obvious.
    ============================================================= */
 
 .box button,
@@ -386,21 +484,23 @@ body > header p strong { color: var(--nox-ink); font-weight: 600; }
 #next1, #next2, #next3, #next4 {
     appearance: none;
     -webkit-appearance: none;
-    background: var(--nox-ink) !important;
-    color: var(--nox-paper) !important;
-    border: 1px solid var(--nox-ink) !important;
-    border-radius: var(--nox-radius-pill) !important;
-    padding: 14px 28px !important;
-    font-family: var(--nox-sans) !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
+    background: var(--nx-cta) !important;
+    color: var(--nx-card) !important;
+    border: 1px solid var(--nx-cta) !important;
+    border-radius: var(--nx-radius) !important;
+    padding: var(--nx-space-3) var(--nx-space-6) !important;
+    font-family: var(--nx-font) !important;
+    font-size: var(--nx-size-small) !important;
+    font-weight: var(--nx-fw-semi) !important;
     line-height: 1 !important;
-    letter-spacing: 0.01em;
+    letter-spacing: 0;
     cursor: pointer;
-    transition: background 180ms var(--nox-ease), border-color 180ms var(--nox-ease), color 180ms var(--nox-ease), transform 180ms var(--nox-ease), box-shadow 180ms var(--nox-ease);
+    transition: background var(--nx-dur) var(--nx-ease),
+                border-color var(--nx-dur) var(--nx-ease),
+                color var(--nx-dur) var(--nx-ease);
     width: auto !important;
     height: auto !important;
-    box-shadow: 0 1px 0 rgba(35,55,90,0.06);
+    box-shadow: none !important;
     min-width: 120px;
     text-align: center;
 }
@@ -411,259 +511,283 @@ body > header p strong { color: var(--nox-ink); font-weight: 600; }
 #bt-abort:hover,
 #toggleConsole:hover,
 #next1:hover, #next2:hover, #next3:hover, #next4:hover {
-    background: var(--nox-crimson) !important;
-    border-color: var(--nox-crimson) !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 1px 0 rgba(35,55,90,0.06), 0 8px 20px rgba(184,53,83,0.25);
+    background: var(--nx-cta-hover) !important;
+    border-color: var(--nx-cta-hover) !important;
+    color: var(--nx-card) !important;
 }
 
+/* Press darkens rather than shrinks. */
 .box button:active,
 #bt-sync:active,
 #bt-abort:active {
-    transform: translateY(1px);
+    background: var(--nx-red-deep) !important;
+    border-color: var(--nx-red-deep) !important;
+}
+
+.box button:focus-visible,
+#consoleLogs button:focus-visible {
+    outline: 2px solid var(--nx-text);
+    outline-offset: 2px;
 }
 
 #bt-sync {
-    padding: 18px 36px !important;
+    padding: var(--nx-space-4) var(--nx-space-8) !important;
     font-size: 15px !important;
 }
 
-#bt-abort {
+/* Both of these live inside #consoleLogs, so they must out-specify
+   the `#consoleLogs button` primary rule above (1,0,1) — an id
+   alone (1,0,0) loses to it and they'd render as solid red CTAs. */
+
+/* Stop migration — destructive, and red here reads as the system
+   intends it to on a product surface. */
+#consoleLogs #bt-abort {
     background: transparent !important;
-    color: var(--nox-crimson) !important;
-    border-color: var(--nox-crimson) !important;
+    color: var(--nx-red-text) !important;
+    border-color: var(--nx-red-text) !important;
 }
-#bt-abort:hover {
-    background: var(--nox-crimson) !important;
-    color: #FFFFFF !important;
+#consoleLogs #bt-abort:hover {
+    background: var(--nx-red) !important;
+    border-color: var(--nx-red) !important;
+    color: var(--nx-card) !important;
 }
 
-#toggleConsole {
+/* Secondary ghost → fills navy. */
+#consoleLogs #toggleConsole {
     background: transparent !important;
-    color: var(--nox-ink) !important;
-    border-color: var(--nox-line-strong) !important;
+    color: var(--nx-text) !important;
+    border-color: var(--nx-line-strong) !important;
 }
-#toggleConsole:hover {
-    background: var(--nox-paper-3) !important;
-    border-color: var(--nox-ink) !important;
-    color: var(--nox-ink) !important;
+#consoleLogs #toggleConsole:hover {
+    background: var(--nx-text) !important;
+    border-color: var(--nx-text) !important;
+    color: var(--nx-surface-card) !important;
 }
 
 #modal-btn-ok {
-    background: var(--nox-ink) !important;
-    color: var(--nox-paper) !important;
-    border: 1px solid var(--nox-ink) !important;
-    border-radius: var(--nox-radius-pill) !important;
-    padding: 12px 28px !important;
-    font-family: var(--nox-sans);
-    font-size: 14px;
-    font-weight: 600;
+    background: var(--nx-cta) !important;
+    color: var(--nx-card) !important;
+    border: 1px solid var(--nx-cta) !important;
+    border-radius: var(--nx-radius) !important;
+    padding: var(--nx-space-3) var(--nx-space-6) !important;
+    font-family: var(--nx-font);
+    font-size: var(--nx-size-small);
+    font-weight: var(--nx-fw-semi);
     cursor: pointer;
-    margin-top: 16px;
-    transition: background 180ms var(--nox-ease);
+    margin-top: var(--nx-space-4);
+    transition: background var(--nx-dur) var(--nx-ease);
 }
 #modal-btn-ok:hover {
-    background: var(--nox-crimson) !important;
-    border-color: var(--nox-crimson) !important;
-    color: #FFFFFF !important;
+    background: var(--nx-cta-hover) !important;
+    border-color: var(--nx-cta-hover) !important;
 }
 
 /* =============================================================
-   Yes / No choice tiles
+   Yes / No choice tiles — the Card component: hairline surface,
+   square, no resting shadow, and the system's ONE elevation on
+   hover (red border + 8px lift).
    ============================================================= */
 
 #yesMail, #noMail, #yesPass, #noPass {
-    background: var(--nox-paper-2) !important;
-    border: 1px solid var(--nox-line) !important;
-    border-radius: var(--nox-radius-lg) !important;
-    padding: 26px 24px !important;
-    transition: background 200ms var(--nox-ease), border-color 200ms var(--nox-ease), transform 200ms var(--nox-ease), box-shadow 200ms var(--nox-ease);
+    background: var(--nx-surface-card) !important;
+    border: 1px solid var(--nx-line) !important;
+    border-radius: var(--nx-radius) !important;
+    padding: var(--nx-space-6) !important;
+    transition: border-color var(--nx-dur) var(--nx-ease),
+                transform 260ms var(--nx-ease-move),
+                box-shadow 260ms var(--nx-ease-move);
     cursor: pointer;
-}
-
-#yesMail, #yesPass {
-    background: var(--nox-evergreen-soft) !important;
-}
-#noMail, #noPass {
-    background: var(--nox-pink-soft) !important;
 }
 
 #yesMail:hover, #yesPass:hover,
 #noMail:hover, #noPass:hover {
-    border-color: var(--nox-ink) !important;
-    transform: translateY(-2px);
-    box-shadow: var(--nox-shadow-card);
+    border-color: var(--nx-red) !important;
+    transform: translateY(-8px);
+    box-shadow: var(--nx-shadow-card-hover);
 }
 
-#yesMail .icon-check, #yesPass .icon-check { color: var(--nox-evergreen); }
-#noMail .icon-xmark, #noPass .icon-xmark { color: var(--nox-crimson); }
-
-.icon-check { color: var(--nox-evergreen); }
-.icon-xmark { color: var(--nox-crimson); }
+/* Both navy: these are a choice, not a status, and the system
+   forbids green and red as a co-equal pair. The glyph and the
+   label carry the difference. */
+#yesMail .icon-check, #yesPass .icon-check,
+#noMail .icon-xmark, #noPass .icon-xmark,
+.icon-check, .icon-xmark {
+    color: var(--nx-text);
+    font-size: 32px;
+}
 
 #yesMail p.text-3xl, #yesPass p.text-3xl,
 #noMail p.text-3xl, #noPass p.text-3xl {
-    font-family: var(--nox-sans);
-    font-weight: 700;
-    font-size: 24px;
+    font-family: var(--nx-font);
+    font-weight: var(--nx-fw-bold);
+    font-size: 21px;
     text-decoration: none !important;
-    color: var(--nox-ink) !important;
-    letter-spacing: -0.02em;
+    color: var(--nx-text) !important;
+    letter-spacing: var(--nx-track-heading);
     margin: 0;
 }
 
 #yesMail p.text-2xl, #yesPass p.text-2xl,
 #noMail p.text-2xl, #noPass p.text-2xl {
-    font-family: var(--nox-sans);
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--nox-ink-2) !important;
-    line-height: 1.5;
+    font-family: var(--nx-font);
+    font-size: var(--nx-size-small);
+    font-weight: var(--nx-fw-regular);
+    color: var(--nx-text-muted) !important;
+    line-height: var(--nx-lh-body);
     margin: 0;
     text-align: center;
 }
 
 /* =============================================================
-   Confirm page — OLD/NEW pills
+   Confirm page — OLD/NEW chips
    ============================================================= */
 
+/* Badge (solid): mono, uppercase, 2px radius. */
 .old-new {
-    color: var(--nox-paper) !important;
-    background: var(--nox-ink) !important;
-    border-radius: var(--nox-radius-pill) !important;
-    font-family: var(--nox-mono) !important;
+    color: var(--nx-card) !important;
+    background: var(--nx-navy) !important;
+    border-radius: var(--nx-radius-input) !important;
+    font-family: var(--nx-font-mono) !important;
     font-size: 11px !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.14em !important;
+    font-weight: var(--nx-fw-semi) !important;
+    letter-spacing: var(--nx-track-chip) !important;
     text-transform: uppercase;
-    height: 28px !important;
+    height: 24px !important;
     width: auto !important;
-    padding: 0 14px !important;
+    padding: 0 10px !important;
     line-height: 1 !important;
 }
+[data-theme="dark"] .old-new {
+    background: var(--nx-on-dark) !important;
+    color: var(--nx-navy) !important;
+}
 
+/* Server names → mono. */
 #migrationText {
-    font-family: var(--nox-serif);
-    font-style: italic;
-    font-size: 18px;
-    color: var(--nox-ink-2) !important;
-    margin-top: 12px !important;
+    font-family: var(--nx-font-mono);
+    font-style: normal !important;
+    font-size: 13px;
+    color: var(--nx-text-muted) !important;
+    margin-top: var(--nx-space-3) !important;
 }
 
 #oldM, #newM {
-    font-family: var(--nox-mono);
+    font-family: var(--nx-font-mono);
     font-size: 13px;
-    font-weight: 500;
-    color: var(--nox-ink);
-    letter-spacing: 0.02em;
+    font-weight: var(--nx-fw-medium);
+    color: var(--nx-text);
 }
 
 /* =============================================================
-   Console / log boxes
+   Console / log — a full-bleed navy signage panel
    ============================================================= */
 
-/* Progress summary above the bar */
 .progress-head {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    gap: 8px 20px;
+    gap: var(--nx-space-2) var(--nx-space-6);
     flex-wrap: wrap;
     width: 100%;
 }
 .progress-head-main {
     display: flex;
     align-items: baseline;
-    gap: 12px;
+    gap: var(--nx-space-3);
     flex-wrap: wrap;
 }
+/* A figure → mono, departure-board style. */
 .progress-percent {
-    font-family: var(--nox-sans);
-    font-weight: 700;
-    font-size: 34px;
+    font-family: var(--nx-font-mono);
+    font-weight: var(--nx-fw-bold);
+    font-size: var(--nx-size-h2);
     line-height: 1;
-    letter-spacing: -0.02em;
-    color: var(--nox-ink);
+    letter-spacing: var(--nx-track-heading);
+    color: var(--nx-text);
+    font-variant-numeric: tabular-nums;
 }
 .progress-eta {
-    font-family: var(--nox-serif);
-    font-style: italic;
+    font-family: var(--nx-font);
+    font-style: normal;
+    font-weight: var(--nx-fw-medium);
     font-size: 17px;
-    color: var(--nox-ink-2);
+    color: var(--nx-text-muted);
 }
 .progress-msgs {
-    font-family: var(--nox-mono);
+    font-family: var(--nx-font-mono);
     font-size: 13px;
-    color: var(--nox-ink-2);
+    color: var(--nx-text-muted);
     white-space: nowrap;
 }
 
 /* Indeterminate bar until imapsync emits the first ETA line */
 #progress-bar-done.indeterminate {
     width: 30% !important;
-    animation: nox-indet 1.15s var(--nox-ease) infinite;
+    animation: nox-indet 1.15s var(--nx-ease-move) infinite;
 }
 @keyframes nox-indet {
     0%   { margin-left: -32%; }
     100% { margin-left: 102%; }
 }
 
-/* Collapsible, folder-style tabbed consoles. The ID-scoped selectors are
-   needed to beat the higher-specificity `#consoleLogs button` primary rule;
-   active tab shares the dark panel colour so it reads as one connected folder. */
+/* Tabbed consoles. The ID-scoped selectors are needed to beat the
+   higher-specificity `#consoleLogs button` primary rule; the active
+   tab shares the panel colour so it reads as one connected folder. */
 .console-area { width: 100%; }
 
 #consoleLogs .tabs {
     display: flex;
-    gap: 4px;
+    gap: 2px;
     flex-wrap: wrap;
     margin: 0;
-    padding: 0 0 0 6px;
+    padding: 0;
 }
 #consoleLogs .tabs .tab {
     appearance: none;
     -webkit-appearance: none;
-    background: #232C3B !important;
-    color: #9BA3B2 !important;
-    border: 1px solid rgba(247, 245, 240, 0.10) !important;
+    background: var(--nox-console-tab) !important;
+    color: var(--nox-tab-label) !important;
+    border: 1px solid var(--nx-line-dark) !important;
     border-bottom: none !important;
-    border-radius: 9px 9px 0 0 !important;
-    padding: 9px 16px !important;
+    border-radius: var(--nx-radius) !important;
+    padding: 10px var(--nx-space-4) !important;
     margin: 0 !important;
-    font-family: var(--nox-sans) !important;
-    font-size: 13px !important;
-    font-weight: 600 !important;
+    font-family: var(--nx-font-mono) !important;
+    font-size: 11px !important;
+    font-weight: var(--nx-fw-medium) !important;
+    letter-spacing: var(--nx-track-chip);
+    text-transform: uppercase;
     line-height: 1 !important;
     min-width: 0 !important;
     box-shadow: none !important;
     cursor: pointer;
     position: relative;
     z-index: 0;
-    transition: background 160ms var(--nox-ease), color 160ms var(--nox-ease);
+    transition: background var(--nx-dur) var(--nx-ease),
+                color var(--nx-dur) var(--nx-ease);
 }
 #consoleLogs .tabs .tab:hover {
-    background: #2B3547 !important;
-    color: #E8E3DA !important;
-    transform: none !important;
-    box-shadow: none !important;
+    background: var(--nox-console) !important;
+    color: var(--nx-on-dark) !important;
+    border-color: var(--nx-line-dark) !important;
 }
 #consoleLogs .tabs .tab.tab-active {
-    background: #131A28 !important;   /* matches the panel below = connected */
-    color: #F0EBE2 !important;
+    background: var(--nox-console) !important;   /* matches the panel below = connected */
+    color: var(--nx-on-dark) !important;
     z-index: 2;
 }
 
 .tab-panel {
-    background: #131A28 !important;
-    color: #F0EBE2 !important;
-    border: 1px solid rgba(247, 245, 240, 0.10) !important;
-    border-radius: 0 var(--nox-radius-lg) var(--nox-radius-lg) var(--nox-radius-lg) !important;
+    background: var(--nox-console) !important;
+    color: var(--nx-on-dark) !important;
+    border: 1px solid var(--nx-line-dark) !important;
+    border-radius: var(--nx-radius) !important;
     width: 100% !important;
     height: 280px !important;
     overflow: auto;
     margin-top: -1px;          /* tuck under the tab row so the active tab joins it */
-    padding: 16px 18px !important;
-    font-family: var(--nox-mono);
+    padding: var(--nx-space-4) !important;
+    font-family: var(--nx-font-mono);
     font-size: 12px;
     line-height: 1.7;
     position: relative;
@@ -671,75 +795,80 @@ body > header p strong { color: var(--nox-ink); font-weight: 600; }
 }
 
 #abort, #console, #output {
-    color: #F0EBE2;
+    color: var(--nx-on-dark);
     white-space: pre-wrap;
     word-break: break-word;
 }
 
-/* Completion panel (shown when the sync finishes) */
+/* Completion panel (shown when the sync finishes). JS sets its
+   display — don't declare it here. */
 .sync-done {
     flex-direction: column;
     align-items: center;
     text-align: center;
     gap: 10px;
-    padding: 8px 8px 4px;
+    padding: var(--nx-space-2) var(--nx-space-2) var(--nx-space-1);
 }
-.sync-done-icon { color: var(--nox-evergreen); font-size: 40px; }
-.sync-done-icon.stopped { color: var(--nox-crimson); }
+/* A real status, and never beside its opposite → green/red hold. */
+.sync-done-icon { color: var(--nx-status-ok); font-size: 40px; }
+.sync-done-icon.stopped { color: var(--nx-red-text); }
 .sync-done-title {
-    font-family: var(--nox-sans);
-    font-weight: 700;
-    font-size: 24px;
-    letter-spacing: -0.02em;
-    color: var(--nox-ink);
+    font-family: var(--nx-font);
+    font-weight: var(--nx-fw-bold);
+    font-size: var(--nx-size-h3);
+    letter-spacing: var(--nx-track-heading);
+    color: var(--nx-text);
     margin: 0;
 }
 .sync-done-sub {
-    font-family: var(--nox-sans);
+    font-family: var(--nx-font);
     font-size: 15px;
-    color: var(--nox-ink-2);
+    color: var(--nx-text-muted);
     margin: 0;
     max-width: 520px;
 }
-.sync-done .btn-row { margin-top: 6px; }
+.sync-done .btn-row { margin-top: var(--nx-space-2); }
 .sync-done-hint {
-    font-family: var(--nox-sans);
+    font-family: var(--nx-font);
     font-size: 13px;
-    color: var(--nox-ink-mute);
-    margin: 4px 0 0;
+    color: var(--nx-text-faint);
+    margin: var(--nx-space-1) 0 0;
     max-width: 520px;
-    line-height: 1.5;
+    line-height: var(--nx-lh-body);
 }
+/* No italic — emphasis is weight and colour. */
 .sync-done-hint em {
-    font-family: var(--nox-serif);
-    font-style: italic;
-    color: var(--nox-ink-2);
+    font-style: normal;
+    font-weight: var(--nx-fw-semi);
+    color: var(--nx-text-muted);
 }
 
 #consoleLogs {
-    background: var(--nox-paper) !important;
-    border: 1px solid var(--nox-line) !important;
-    border-radius: var(--nox-radius-xl) !important;
-    box-shadow: var(--nox-shadow-card);
+    background: var(--nx-surface-card) !important;
+    border: 1px solid var(--nx-line) !important;
+    border-top: var(--nx-bar) solid var(--nx-navy) !important;
+    border-radius: var(--nx-radius) !important;
     width: 800px !important;
     max-width: 100%;
     margin: auto !important;     /* center vertically in the leftover space too */
-    padding: 32px !important;
-    gap: 20px !important;
+    padding: var(--nx-space-8) !important;
+    gap: var(--nx-space-6) !important;
 }
+[data-theme="dark"] #consoleLogs { border-top-color: var(--nx-on-dark) !important; }
 
 #consoleLogs > .w-full {
-    background: var(--nox-paper-3) !important;
-    border-radius: var(--nox-radius-pill) !important;
-    height: 8px !important;
+    background: var(--nx-line) !important;
+    border-radius: var(--nx-radius) !important;
+    height: 6px !important;
     overflow: hidden;
 }
 
+/* Navy, not red: a running migration is not an error. */
 #progress-bar-done {
-    background: var(--nox-crimson) !important;
-    height: 8px !important;
-    border-radius: var(--nox-radius-pill) !important;
-    transition: width 320ms var(--nox-ease);
+    background: var(--nx-text) !important;
+    height: 6px !important;
+    border-radius: var(--nx-radius) !important;
+    transition: width 320ms var(--nx-ease-move);
 }
 
 /* =============================================================
@@ -752,92 +881,92 @@ body > header p strong { color: var(--nox-ink); font-weight: 600; }
     z-index: 1000;
     align-items: center;
     justify-content: center;
-    padding: 24px;
-    background: rgba(35,55,90,0.55) !important;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    padding: var(--nx-space-6);
+    /* Navy scrim, no blur — the system has no glass. */
+    background: rgba(22,38,71,0.72) !important;
     overflow-y: auto;
 }
 
 .modal-content {
-    background: var(--nox-paper) !important;
-    color: var(--nox-ink) !important;
-    border: 1px solid var(--nox-line) !important;
-    border-radius: var(--nox-radius-xl) !important;
-    padding: 36px 36px 32px !important;
+    background: var(--nx-surface-card) !important;
+    color: var(--nx-text) !important;
+    border: 1px solid var(--nx-line) !important;
+    border-top: var(--nx-bar) solid var(--nx-navy) !important;
+    border-radius: var(--nx-radius) !important;
+    padding: var(--nx-space-8) !important;
     max-width: 540px !important;
     width: 92%;
-    box-shadow: 0 20px 60px rgba(35,55,90,0.30);
+    box-shadow: none;
     text-align: left;
 }
+[data-theme="dark"] .modal-content { border-top-color: var(--nx-on-dark) !important; }
 
 .modal-content h2 {
-    font-family: var(--nox-sans);
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--nox-ink);
-    letter-spacing: -0.02em;
+    font-family: var(--nx-font);
+    font-size: var(--nx-size-h3);
+    font-weight: var(--nx-fw-bold);
+    color: var(--nx-text);
+    letter-spacing: var(--nx-track-heading);
     margin: 0 0 10px !important;
     line-height: 1.2;
 }
 
 .modal-content p {
-    font-family: var(--nox-sans);
+    font-family: var(--nx-font);
     font-size: 15px;
-    line-height: 1.55;
-    color: var(--nox-ink-2);
-    margin: 0 0 18px !important;
+    line-height: var(--nx-lh-body);
+    color: var(--nx-text-muted);
+    margin: 0 0 var(--nx-space-4) !important;
 }
 
 .modal-steps {
     list-style: decimal;
-    margin: 0 0 22px !important;
+    margin: 0 0 var(--nx-space-6) !important;
     padding: 0 0 0 22px !important;
-    color: var(--nox-ink-2);
-    font-size: 14px;
-    line-height: 1.55;
-    counter-reset: nox-step;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-size-small);
+    line-height: var(--nx-lh-body);
 }
 .modal-steps li {
-    margin: 0 0 8px;
-    padding-left: 4px;
+    margin: 0 0 var(--nx-space-2);
+    padding-left: var(--nx-space-1);
 }
 .modal-steps li::marker {
-    color: var(--nox-crimson);
-    font-family: var(--nox-mono);
-    font-weight: 600;
+    color: var(--nx-red-text);
+    font-family: var(--nx-font-mono);
+    font-weight: var(--nx-fw-semi);
     font-size: 12px;
 }
 
 .modal-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px 18px;
-    margin: 0 0 24px;
+    gap: var(--nx-space-2) var(--nx-space-4);
+    margin: 0 0 var(--nx-space-6);
 }
 
 .modal-content a,
 .modal-link {
-    color: var(--nox-crimson);
-    font-family: var(--nox-sans);
+    color: var(--nx-text);
+    font-family: var(--nx-font);
     font-size: 13px;
-    font-weight: 600;
+    font-weight: var(--nx-fw-semi);
     text-decoration: underline;
     text-underline-offset: 3px;
     text-decoration-thickness: 1px;
 }
 .modal-content a:hover,
-.modal-link:hover { color: var(--nox-crimson-hover); }
+.modal-link:hover { color: var(--nx-red-text); }
 
 .modal-link-muted {
-    color: var(--nox-ink-2) !important;
-    font-weight: 500 !important;
-    text-decoration-color: var(--nox-line-strong) !important;
+    color: var(--nx-text-muted) !important;
+    font-weight: var(--nx-fw-medium) !important;
+    text-decoration-color: var(--nx-line-strong) !important;
 }
-.modal-link-muted:hover { color: var(--nox-ink) !important; }
+.modal-link-muted:hover { color: var(--nx-red-text) !important; }
 
 .modal-content #modal-btn-ok {
-    margin-top: 4px !important;
+    margin-top: var(--nx-space-1) !important;
     width: 100%;
 }
 
@@ -846,43 +975,45 @@ body > header p strong { color: var(--nox-ink); font-weight: 600; }
    ============================================================= */
 
 #congratsPage {
-    background: var(--nox-paper);
-    border: 1px solid var(--nox-line);
-    border-radius: var(--nox-radius-xl);
-    box-shadow: var(--nox-shadow-card);
+    background: var(--nx-surface-card);
+    border: 1px solid var(--nx-line);
+    border-top: var(--nx-bar) solid var(--nx-navy);
+    border-radius: var(--nx-radius);
     width: 800px !important;
     max-width: 100%;
-    margin: 24px auto !important;
-    padding: 80px 48px !important;
-    gap: 24px !important;
+    margin: var(--nx-space-6) auto !important;
+    padding: var(--nx-space-16) var(--nx-space-12) !important;
+    gap: var(--nx-space-6) !important;
 }
+[data-theme="dark"] #congratsPage { border-top-color: var(--nx-on-dark); }
 
-#congratsPage i.fa-trophy {
-    color: var(--nox-evergreen) !important;
+/* Success → the green is operational, and stands alone. */
+#congratsPage i[class*="ph-"] {
+    color: var(--nx-status-ok) !important;
     font-size: 56px;
 }
 
 #congratsPage h1 {
-    font-family: var(--nox-sans);
-    font-weight: 700;
-    font-size: 56px;
-    line-height: 1;
-    letter-spacing: -0.04em;
-    color: var(--nox-ink) !important;
+    font-family: var(--nx-font);
+    font-weight: var(--nx-fw-black);
+    font-size: var(--nx-size-display);
+    line-height: var(--nx-lh-display);
+    letter-spacing: var(--nx-track-display);
+    color: var(--nx-text) !important;
     margin: 0;
 }
 
 #congratsPage p {
-    font-family: var(--nox-sans);
-    font-size: 18px;
-    line-height: 1.55;
-    color: var(--nox-ink-2) !important;
+    font-family: var(--nx-font);
+    font-size: var(--nx-size-lead);
+    line-height: var(--nx-lh-lead);
+    color: var(--nx-text-muted) !important;
     max-width: 480px;
     margin: 0;
 }
 
 /* =============================================================
-   Checkbox
+   Checkbox — an input, so it gets the 2px radius
    ============================================================= */
 
 input[type="checkbox"] {
@@ -890,21 +1021,22 @@ input[type="checkbox"] {
     -webkit-appearance: none;
     width: 18px;
     height: 18px;
-    border: 1.5px solid var(--nox-line-strong);
-    border-radius: 5px;
-    background: var(--nox-paper);
+    border: 1px solid var(--nx-line-strong);
+    border-radius: var(--nx-radius-input);
+    background: var(--nx-surface-page);
     cursor: pointer;
     vertical-align: middle;
-    margin-right: 8px;
-    transition: background 180ms var(--nox-ease), border-color 180ms var(--nox-ease);
+    margin-right: var(--nx-space-2);
+    transition: background var(--nx-dur) var(--nx-ease),
+                border-color var(--nx-dur) var(--nx-ease);
     position: relative;
 }
 
-input[type="checkbox"]:hover { border-color: var(--nox-ink); }
+input[type="checkbox"]:hover { border-color: var(--nx-text); }
 
 input[type="checkbox"]:checked {
-    background: var(--nox-ink);
-    border-color: var(--nox-ink);
+    background: var(--nx-text);
+    border-color: var(--nx-text);
 }
 
 input[type="checkbox"]:checked::after {
@@ -914,22 +1046,27 @@ input[type="checkbox"]:checked::after {
     top: 1px;
     width: 5px;
     height: 10px;
-    border: solid var(--nox-paper);
+    border: solid var(--nx-surface-card);
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
 }
 
+input[type="checkbox"]:focus-visible {
+    outline: 2px solid var(--nx-text);
+    outline-offset: 2px;
+}
+
 label[for="verbose"], label[for="dry"] {
-    font-family: var(--nox-sans);
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--nox-ink-2) !important;
+    font-family: var(--nx-font);
+    font-size: var(--nx-size-small);
+    font-weight: var(--nx-fw-medium);
+    color: var(--nx-text-muted) !important;
     cursor: pointer;
     user-select: none;
 }
 
 /* =============================================================
-   Top navigation bar — back + theme toggle (Task 3)
+   Top navigation bar — back + theme toggle
    ============================================================= */
 
 .nav-bar {
@@ -941,7 +1078,7 @@ label[for="verbose"], label[for="dry"] {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 20px;
+    padding: var(--nx-space-4) var(--nx-space-4);
     pointer-events: none;         /* let clicks fall through the empty bar... */
 }
 .nav-bar .nav-btn { pointer-events: auto; }   /* ...but not the buttons */
@@ -951,82 +1088,88 @@ label[for="verbose"], label[for="dry"] {
     -webkit-appearance: none;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    background: var(--nox-paper);
-    color: var(--nox-ink);
-    border: 1px solid var(--nox-line-strong);
-    border-radius: var(--nox-radius-pill);
-    padding: 10px 16px;
-    font-family: var(--nox-sans);
+    gap: var(--nx-space-2);
+    background: var(--nx-surface-card);
+    color: var(--nx-text);
+    border: 1px solid var(--nx-line-strong);
+    border-radius: var(--nx-radius);
+    padding: 10px var(--nx-space-3);
+    font-family: var(--nx-font);
     font-size: 13px;
-    font-weight: 600;
+    font-weight: var(--nx-fw-semi);
     line-height: 1;
     cursor: pointer;
-    box-shadow: var(--nox-shadow-soft);
-    transition: background 180ms var(--nox-ease), color 180ms var(--nox-ease),
-                border-color 180ms var(--nox-ease), transform 180ms var(--nox-ease);
+    text-decoration: none;
+    box-shadow: none;
+    transition: background var(--nx-dur) var(--nx-ease),
+                color var(--nx-dur) var(--nx-ease),
+                border-color var(--nx-dur) var(--nx-ease);
 }
+/* Ghost → fills navy, so the hover is unmistakable. */
 .nav-btn:hover {
-    border-color: var(--nox-ink);
-    transform: translateY(-1px);
+    background: var(--nx-text);
+    border-color: var(--nx-text);
+    color: var(--nx-surface-card);
 }
 .nav-btn:focus-visible {
-    outline: 2px solid var(--nox-crimson);
+    outline: 2px solid var(--nx-text);
     outline-offset: 2px;
 }
 /* Keep the theme toggle pinned right even when Back is hidden (step 1),
    where it would otherwise be the only flex child and slide left. */
-#bt-theme { padding: 10px 13px; margin-left: auto; }   /* icon-only, keep it square-ish */
+#bt-theme { padding: 10px; margin-left: auto; }   /* icon-only, keep it square */
+#bt-theme i { font-size: 16px; }
 
 /* =============================================================
-   Site footer — license / credit link (Task: credit Lamiral)
+   Site footer — license / credit link
    ============================================================= */
 
 .site-footer {
     text-align: center;
-    padding: 12px 24px 16px;
-    color: var(--nox-ink-mute);
-    font-family: var(--nox-sans);
+    padding: var(--nx-space-3) var(--nx-space-6) var(--nx-space-4);
+    color: var(--nx-text-faint);
+    font-family: var(--nx-font);
     font-size: 13px;
     line-height: 1.6;
 }
 .site-footer a {
-    color: var(--nox-ink-2);
+    color: var(--nx-text-muted);
     text-decoration: underline;
     text-underline-offset: 3px;
     text-decoration-thickness: 1px;
-    font-weight: 600;
+    font-weight: var(--nx-fw-semi);
 }
-.site-footer a:hover { color: var(--nox-crimson); }
+.site-footer a:hover { color: var(--nx-red-text); }
 
 /* =============================================================
-   Form validation feedback (Task 4)
+   Form validation feedback
    ============================================================= */
 
 .field-error {
-    color: var(--nox-danger) !important;
-    font-family: var(--nox-sans);
+    color: var(--nx-red-text) !important;
+    font-family: var(--nx-font);
     font-size: 13px;
-    font-weight: 500;
+    font-weight: var(--nx-fw-medium);
     line-height: 1.4;
     margin: 2px 0 0;
     text-align: left;
 }
 
 .box input.invalid:not([type="checkbox"]):not([type="radio"]) {
-    border-color: var(--nox-danger) !important;
-    box-shadow: 0 0 0 4px rgba(184, 53, 83, 0.14) !important;
+    border-color: var(--nx-status-down) !important;
+    box-shadow: inset 0 0 0 1px var(--nx-status-down) !important;
 }
 
 #confirm-error { text-align: center; }
 
-/* Auto-fill cue: when provider detection pre-fills a host, mark it green and
-   show a "we filled this, double-check it" hint (Task: green bubble). */
+/* Auto-fill cue: when provider detection pre-fills a host, mark it and
+   show a "we filled this, double-check it" hint. Green is the system's
+   operational colour and it stands alone here, so it holds. */
 .field-hint {
-    color: var(--nox-evergreen) !important;
-    font-family: var(--nox-sans);
+    color: var(--nx-green-deep) !important;
+    font-family: var(--nx-font);
     font-size: 13px;
-    font-weight: 500;
+    font-weight: var(--nx-fw-medium);
     line-height: 1.4;
     margin: 2px 0 0;
     text-align: left;
@@ -1034,11 +1177,12 @@ label[for="verbose"], label[for="dry"] {
     align-items: flex-start;
     gap: 6px;
 }
+[data-theme="dark"] .field-hint { color: #8FB995 !important; }  /* green lifted for AA on navy */
 .field-hint i { margin-top: 2px; }
 
 .box input.prefilled:not([type="checkbox"]):not([type="radio"]) {
-    border-color: var(--nox-evergreen) !important;
-    box-shadow: 0 0 0 4px rgba(78, 121, 84, 0.16) !important;
+    border-color: var(--nx-green) !important;
+    box-shadow: inset 0 0 0 1px var(--nx-green) !important;
 }
 
 /* Show/hide password — eye button inside the field. */
@@ -1047,7 +1191,7 @@ label[for="verbose"], label[for="dry"] {
 .box .pw-toggle {
     position: absolute;
     top: 50%;
-    right: 8px;
+    right: var(--nx-space-1);
     transform: translateY(-50%);
     display: inline-flex;
     align-items: center;
@@ -1058,20 +1202,19 @@ label[for="verbose"], label[for="dry"] {
     padding: 0 !important;
     background: transparent !important;
     border: 0 !important;
-    border-radius: var(--nox-radius-sm) !important;
-    color: var(--nox-ink-mute) !important;
+    border-radius: var(--nx-radius-input) !important;
+    color: var(--nx-text-faint) !important;
     box-shadow: none !important;
     cursor: pointer;
-    transition: color 160ms var(--nox-ease);
+    transition: color var(--nx-dur) var(--nx-ease);
 }
 .box .pw-toggle:hover {
     background: transparent !important;
-    color: var(--nox-ink) !important;
+    color: var(--nx-text) !important;
     transform: translateY(-50%) !important;
-    box-shadow: none !important;
 }
 .box .pw-toggle:focus-visible {
-    outline: 2px solid var(--nox-crimson);
+    outline: 2px solid var(--nx-text);
     outline-offset: 2px;
 }
 
@@ -1083,11 +1226,11 @@ label[for="verbose"], label[for="dry"] {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: var(--nx-space-3);
     flex-wrap: wrap;
 }
 
-/* Ghost/secondary styling; the #consoleLogs selector is needed to beat the
+/* Secondary ghost; the #consoleLogs selector is needed to beat the
    higher-specificity `#consoleLogs button` primary rule for Start over. */
 .box .btn-back,
 #consoleLogs .btn-back {
@@ -1096,30 +1239,31 @@ label[for="verbose"], label[for="dry"] {
     display: inline-flex;
     align-items: center;
     justify-content: center;   /* center the arrow + label within the button */
-    gap: 8px;
+    gap: var(--nx-space-2);
     background: transparent !important;
-    color: var(--nox-ink) !important;
-    border: 1px solid var(--nox-line-strong) !important;
-    border-radius: var(--nox-radius-pill) !important;
-    padding: 14px 24px !important;
-    font-family: var(--nox-sans) !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
+    color: var(--nx-text) !important;
+    border: 1px solid var(--nx-line-strong) !important;
+    border-radius: var(--nx-radius) !important;
+    padding: var(--nx-space-3) var(--nx-space-6) !important;
+    font-family: var(--nx-font) !important;
+    font-size: var(--nx-size-small) !important;
+    font-weight: var(--nx-fw-semi) !important;
     line-height: 1 !important;
     cursor: pointer;
     box-shadow: none !important;
-    transition: background 180ms var(--nox-ease), border-color 180ms var(--nox-ease), color 180ms var(--nox-ease);
+    transition: background var(--nx-dur) var(--nx-ease),
+                border-color var(--nx-dur) var(--nx-ease),
+                color var(--nx-dur) var(--nx-ease);
 }
 .box .btn-back:hover,
 #consoleLogs .btn-back:hover {
-    background: var(--nox-paper-3) !important;
-    border-color: var(--nox-ink) !important;
-    color: var(--nox-ink) !important;
-    transform: none !important;
+    background: var(--nx-text) !important;
+    border-color: var(--nx-text) !important;
+    color: var(--nx-surface-card) !important;
 }
 
 /* =============================================================
-   Credits page (built on the same design system)
+   Credits page (same system)
    ============================================================= */
 
 .credit-card .second { text-align: center; }
@@ -1129,7 +1273,22 @@ label[for="verbose"], label[for="dry"] {
     flex-wrap: wrap;
     justify-content: center;
     gap: 10px 22px;
-    margin-top: 4px;
+    margin-top: var(--nx-space-1);
+}
+
+/* =============================================================
+   Motion — respect the OS setting
+   ============================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    #yesMail:hover, #yesPass:hover,
+    #noMail:hover, #noPass:hover { transform: none; }
 }
 
 /* =============================================================
@@ -1138,29 +1297,29 @@ label[for="verbose"], label[for="dry"] {
 
 @media (max-width: 880px) {
     body > header { padding: 72px 20px 40px; }   /* extra top room for the fixed nav bar */
-    .nav-bar { padding: 12px 14px; }
-    .nav-btn { padding: 9px 14px; font-size: 12px; }
+    .nav-bar { padding: var(--nx-space-3) var(--nx-space-3); }
+    .nav-btn { padding: 9px var(--nx-space-3); font-size: 12px; }
     .box {
         width: 100% !important;
     }
-    .box .second { padding: 40px 24px 32px !important; }
+    .box .second { padding: var(--nx-space-8) var(--nx-space-6) !important; }
     .tab-panel { height: 240px !important; }
-    #consoleLogs, #congratsPage { padding: 24px 18px !important; }
+    #consoleLogs, #congratsPage { padding: var(--nx-space-6) var(--nx-space-4) !important; }
     .progress-percent { font-size: 28px; }
-    #congratsPage h1 { font-size: 40px; }
+    #congratsPage h1 { font-size: var(--nx-size-h2); }
 }
 
 /* Short viewports: auto-compact the hero and cards so the content-heavy steps
    still fit one screen without scrolling. Tall screens keep the larger hero. */
 @media (max-height: 820px) {
-    body > header { padding: 14px 24px 6px; max-width: 780px; }
+    body > header { padding: var(--nx-space-3) var(--nx-space-6) var(--nx-space-1); max-width: 780px; }
     body > header .nox-eyebrow { margin-bottom: 6px; }
-    body > header h1 { font-size: clamp(24px, 3.2vw, 34px); line-height: 1; margin: 0 0 4px; }
+    body > header h1 { font-size: clamp(24px, 3.2vw, 34px); line-height: 1; margin: 0 0 var(--nx-space-1); }
     body > header p { font-size: 13px; line-height: 1.4; }
-    #main { padding: 8px 24px 12px; }
-    .box .second { padding: 18px 40px 18px !important; gap: 10px !important; }
+    #main { padding: var(--nx-space-2) var(--nx-space-6) var(--nx-space-3); }
+    .box .second { padding: var(--nx-space-4) var(--nx-space-8) !important; gap: 10px !important; }
     .box .second p.text-3xl { font-size: clamp(20px, 2.4vw, 26px); }
-    .box .second i.fa-2x { font-size: 26px; margin-bottom: 0; }
-    #yesMail, #noMail, #yesPass, #noPass { padding: 16px 18px !important; }
+    .box .second > i { font-size: 22px; margin-bottom: 0; }
+    #yesMail, #noMail, #yesPass, #noPass { padding: var(--nx-space-4) !important; }
     .box .btn-back, .box button { padding-top: 11px !important; padding-bottom: 11px !important; }
 }

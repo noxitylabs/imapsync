@@ -26,8 +26,8 @@
             <link rel="preconnect" href="https://fonts.googleapis.com">
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
             <link rel="stylesheet"
-                  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-                  integrity="sha384-5e2ESR8Ycmos6g3gAKr1Jvwye8sW4U1u/cAKulfVJnkakCcMqhOudbtPnvJ+nbv7"
+                  href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css"
+                  integrity="sha384-nblAP2mo2pVPyMQZDw9Xy9Cwgs9lowushAYep4w5+Q9kF4Ibf3n0B/gCMVdR+Vqy"
                   crossorigin="anonymous" />
         </head>
         <body>
@@ -36,7 +36,7 @@
             <div id="nav-bar" class="nav-bar">
                 <button type="button" id="bt-theme" class="nav-btn"
                         aria-label="Switch to dark mode" aria-pressed="false">
-                    <i class="fa-solid fa-moon" aria-hidden="true"></i>
+                    <i class="ph-bold ph-moon" aria-hidden="true"></i>
                 </button>
             </div>
             <header>
@@ -53,7 +53,7 @@
                     <hr>
         
                     <div class="second flex flex-col justify-start items-center gap-4 m-4 h-full">
-                        <i class="fa-solid fa-envelope fa-2x"></i>
+                        <i class="ph-bold ph-envelope"></i>
                         <p class="text-3xl text-center">What is your current e-mail?
                         </p>
                         
@@ -78,7 +78,7 @@
                     <hr>
         
                     <div class="second flex flex-col justify-start items-center gap-4 m-4 h-full">
-                        <i class="fa-solid fa-globe fa-2x"></i>
+                        <i class="ph-bold ph-globe"></i>
                         <p class="text-3xl text-center">Please let us know where the e-mail is being moved to and from
                         </p>
                         <div class="flex flex-col justify-center items-center gap-4 h-full w-full">
@@ -87,7 +87,7 @@
                                     aria-describedby="host1-hint host1-error" />
                                 <label for="host1" class="text-gray-500">Existing server, ie <i>mail.yourdomain.com</i></label>
                                 <p id="host1-hint" class="field-hint hidden" role="status">
-                                    <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                                    <i class="ph-bold ph-magic-wand" aria-hidden="true"></i>
                                     <span id="host1-hint-text"></span>
                                 </p>
                                 <p id="host1-error" class="field-error hidden" role="alert"></p>
@@ -99,7 +99,7 @@
                                 <p id="host2-error" class="field-error hidden" role="alert"></p>
                             </div>
                             <div class="btn-row">
-                                <button type="button" class="btn-back"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Back</span></button>
+                                <button type="button" class="btn-back"><i class="ph-bold ph-arrow-left" aria-hidden="true"></i><span>Back</span></button>
                                 <button type="button" id="next2" class="border-2 p-2 w-[100px] rounded-lg">Next</button>
                             </div>
                         </div>
@@ -126,7 +126,7 @@
                     <hr>
         
                     <div class="second flex flex-col justify-start items-center gap-4 m-4 h-full">
-                        <i class="fa-solid fa-envelope fa-2x"></i>
+                        <i class="ph-bold ph-envelope"></i>
                         <p class="text-3xl text-center">Does the <u>e-mail address</u> for the accounts on the new server match
                             those
                             on the old server?
@@ -134,20 +134,20 @@
                         <div class="flex flex-row justify-center items-start gap-4 h-full w-full">
                             <div id="yesMail"
                                 class="cursor-pointer flex flex-col justify-start items-center gap-2 border-2 p-4 w-1/2 h-full rounded-lg">
-                                <i class="fa-solid fa-circle-check fa-2x icon-check"></i>
+                                <i class="ph-bold ph-check-circle icon-check"></i>
                                 <p class="text-3xl text-center underline">Same e-mails</p>
                                 <p class="text-2xl text-gray-300 text-center">It makes it easier if they're all the same</p>
                             </div>
                             <div id="noMail"
                                 class="cursor-pointer flex flex-col justify-start items-center gap-2 border-2 p-4 w-1/2 h-full rounded-lg">
-                                <i class="fa-solid fa-circle-xmark fa-2x icon-xmark"></i>
+                                <i class="ph-bold ph-x-circle icon-xmark"></i>
                                 <p class="text-3xl text-center underline">Different e-mails</p>
                                 <p class="text-2xl text-gray-300 text-center">Guess it's time for a change
                                 </p>
                             </div>
                         </div>
                         <div class="btn-row">
-                            <button type="button" class="btn-back"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Back</span></button>
+                            <button type="button" class="btn-back"><i class="ph-bold ph-arrow-left" aria-hidden="true"></i><span>Back</span></button>
                         </div>
                     </div>
                 </div>
@@ -159,7 +159,7 @@
                     <hr>
         
                     <div class="second flex flex-col justify-start items-center gap-4 m-4 h-full">
-                        <i class="fa-solid fa-envelope fa-2x"></i>
+                        <i class="ph-bold ph-envelope"></i>
                         <p class="text-3xl text-center">What is your new e-mail?
                         </p>
                         <div class="flex flex-row justify-center items-start gap-4 w-full">
@@ -172,7 +172,7 @@
                             </div>
                         </div>
                         <div class="btn-row">
-                            <button type="button" class="btn-back"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Back</span></button>
+                            <button type="button" class="btn-back"><i class="ph-bold ph-arrow-left" aria-hidden="true"></i><span>Back</span></button>
                             <button type="button" id="next3" class="border-2 p-2 w-[100px] rounded-lg">Next</button>
                         </div>
                     </div>
@@ -185,27 +185,27 @@
                     <hr>
         
                     <div class="second flex flex-col justify-start items-center gap-4 m-4 h-full">
-                        <i class="fa-solid fa-key fa-2x"></i>
+                        <i class="ph-bold ph-key"></i>
                         <p class="text-3xl text-center">Do the <u>passwords</u> for the accounts on the new server match those
                             on the old server?
                         </p>
                         <div class="flex flex-row justify-center items-start gap-4 h-full w-full">
                             <div id="yesPass"
                                 class="cursor-pointer flex flex-col justify-start items-center gap-2 border-2 p-4 w-1/2 h-full rounded-lg">
-                                <i class="fa-solid fa-circle-check fa-2x icon-check"></i>
+                                <i class="ph-bold ph-check-circle icon-check"></i>
                                 <p class="text-3xl text-center underline">Same passwords</p>
                                 <p class="text-2xl text-gray-300 text-center">It makes it easier if they're all the same</p>
                             </div>
                             <div id="noPass"
                                 class="cursor-pointer flex flex-col justify-start items-center gap-2 border-2 p-4 w-1/2 h-full rounded-lg">
-                                <i class="fa-solid fa-circle-xmark fa-2x icon-xmark"></i>
+                                <i class="ph-bold ph-x-circle icon-xmark"></i>
                                 <p class="text-3xl text-center underline">Different passwords</p>
                                 <p class="text-2xl text-gray-300 text-center">Having different passwords could be more secure
                                 </p>
                             </div>
                         </div>
                         <div class="btn-row">
-                            <button type="button" class="btn-back"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Back</span></button>
+                            <button type="button" class="btn-back"><i class="ph-bold ph-arrow-left" aria-hidden="true"></i><span>Back</span></button>
                         </div>
                     </div>
                 </div>
@@ -217,7 +217,7 @@
                     <hr>
         
                     <div class="second flex flex-col justify-start items-center gap-4 m-4 h-full">
-                        <i class="fa-solid fa-list fa-2x"></i>
+                        <i class="ph-bold ph-list-checks"></i>
                         <p class="text-3xl text-center">Just the account details to go now...
                         </p>
         
@@ -228,7 +228,7 @@
                                         type="password" autocomplete="current-password" aria-describedby="password1-error" />
                                     <button type="button" class="pw-toggle" data-target="password1"
                                         aria-controls="password1" aria-pressed="false" aria-label="Show password">
-                                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                                        <i class="ph-bold ph-eye" aria-hidden="true"></i>
                                     </button>
                                 </div>
                                 <label id="srcLabel" for="password1" class="text-gray-500">This is for source mail: PRIKAZI MAIL</label>
@@ -240,14 +240,14 @@
                                         type="password" autocomplete="current-password" aria-describedby="password2-error" />
                                     <button type="button" class="pw-toggle" data-target="password2"
                                         aria-controls="password2" aria-pressed="false" aria-label="Show password">
-                                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                                        <i class="ph-bold ph-eye" aria-hidden="true"></i>
                                     </button>
                                 </div>
                                 <label id="destLabel" for="password2" class="text-gray-500">This is for destination mail: PRIKAZI MAIL</label>
                                 <p id="password2-error" class="field-error hidden" role="alert"></p>
                             </div>
                             <div class="btn-row">
-                                <button type="button" class="btn-back"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Back</span></button>
+                                <button type="button" class="btn-back"><i class="ph-bold ph-arrow-left" aria-hidden="true"></i><span>Back</span></button>
                                 <button type="button" id="next4" class="border-2 p-2 w-[100px] rounded-lg">Next</button>
                             </div>
 
@@ -262,12 +262,12 @@
                     <hr>
                     
                     <div class="second flex flex-col justify-start items-center gap-4 m-4">
-                        <i class="fa-solid fa-flag-checkered fa-2x"></i>
+                        <i class="ph-bold ph-flag-checkered"></i>
                         <p class="text-3xl text-center">Confirm the details and start migration
                         </p>
 
                         <div class="btn-row">
-                            <button type="button" class="btn-back"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Back</span></button>
+                            <button type="button" class="btn-back"><i class="ph-bold ph-arrow-left" aria-hidden="true"></i><span>Back</span></button>
                             <button type="button" id="bt-sync" class="border-2 p-2 w-[200px] h-[50px] rounded-lg">Begin migration</button>
                         </div>
                         <p id="confirm-error" class="field-error hidden" role="alert"></p>
@@ -337,7 +337,7 @@
 
                     <!-- Completion panel: shown when the sync finishes -->
                     <div id="sync-done" class="sync-done" style="display:none">
-                        <i id="sync-done-icon" class="fa-solid fa-circle-check sync-done-icon" aria-hidden="true"></i>
+                        <i id="sync-done-icon" class="ph-bold ph-check-circle sync-done-icon" aria-hidden="true"></i>
                         <p id="sync-done-title" class="sync-done-title">Migration complete</p>
                         <p id="sync-done-sub" class="sync-done-sub">All your e-mail has been copied across — folders, flags, and dates intact.</p>
                         <div class="btn-row">
@@ -349,7 +349,7 @@
                 </div>
 
                 <div id="congratsPage" class="flex flex-col justify-center items-center gap-4 m-16 hidden">
-                    <i class="fa-solid fa-trophy fa-4x text-yellow-500"></i>
+                    <i class="ph-bold ph-trophy"></i>
                     <h1 class="text-4xl text-center">Congratulations!</h1>
                     <p class="text-2xl text-center">Your e-mail migration has been successfully completed.</p>
                 </div>
