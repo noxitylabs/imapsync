@@ -10,34 +10,55 @@
 # resolves it, and only hands the request to the real imapsync if it lands
 # on an allow-listed Noxity IP. Everything else is refused.
 #
+# A migration takes minutes to hours, but Cloudflare gives up on any request
+# that hasn't finished in 100 seconds (error 524). So a run is NOT streamed
+# back on this request: it is started detached and answered immediately with
+# a job id, and the browser tails the log through imapsync-log. Every request
+# is short, so the proxy cap never applies. See the README, "Long migrations
+# (status polling)".
+#
 # The real imapsync lives at $IMAPSYNC_REAL and is also exposed directly,
 # behind HTTP basic auth, at /cgi-bin/imapsync-staff for support (/bypass/).
 #
-# No CPAN deps — core Perl + Socket only (already present for imapsync).
+# No CPAN deps — core Perl (Socket, POSIX) only, already present for imapsync.
 # See the README, "Locking the backend (server-side enforcement)".
 
 use strict;
 use warnings;
 use Socket qw(inet_ntoa);
+use POSIX qw(setsid);
 
 # ---- config ---------------------------------------------------------------
 my $IMAPSYNC_REAL = '/usr/lib/cgi-bin/imapsync-staff';  # the real program
 my $ALLOWLIST     = '/var/www/html/noxity-ips.js';      # single source of truth
+my $JOBS_DIR      = '/var/tmp/imapsync-jobs';           # one dir per run
+my $JOB_TTL_DAYS  = 2;                                  # sweep logs older than
 # ---------------------------------------------------------------------------
 
 binmode STDIN;
 binmode STDOUT;
-$| = 1;                          # stream imapsync's log live, never buffer
+$| = 1;
 
 # Slurp the POST body (exactly CONTENT_LENGTH bytes), then pull out host2.
 my $body = read_body($ENV{CONTENT_LENGTH} || 0);
 my $dest = form_field($body, 'host2');
 
-if (is_allowed($dest)) {
-    run_real($body);             # hand off; returns after the child finishes
-} else {
-    refuse($dest);
+refuse($dest), exit 0 unless is_allowed($dest);
+
+# Abort is a different animal: imapsync just signals the running PID and
+# exits, so it finishes in well under a second. Run it inline and hand its
+# output straight back — no job, nothing to poll.
+if (form_field($body, 'abort') ne '') {
+    run_inline($body);
+    exit 0;
 }
+
+my $job = start_job($body);
+print "Status: 202 Accepted\r\n",
+      "Content-Type: text/plain; charset=utf-8\r\n",
+      "Cache-Control: no-store\r\n",
+      "X-Imapsync-Job: $job\r\n\r\n",
+      "$job\n";
 exit 0;
 
 # ---- helpers --------------------------------------------------------------
@@ -103,16 +124,96 @@ sub resolve_a {
     return map { inet_ntoa($_) } @h[4 .. $#h];
 }
 
-# Allowed: run the real imapsync, feeding it the same body on stdin and
-# letting its stdout/stderr flow straight back to Apache (live streaming).
-sub run_real {
+# 32 hex chars from urandom. Unguessable: the job id is the only thing
+# authorising a reader of imapsync-log to see this migration's log.
+sub new_job_id {
+    open my $fh, '<', '/dev/urandom' or fail("urandom: $!");
+    binmode $fh;
+    read $fh, my $bytes, 16;
+    close $fh;
+    fail("urandom short read") unless defined $bytes && length($bytes) == 16;
+    return unpack 'H*', $bytes;
+}
+
+# Start imapsync detached and return its job id. The browser gets an answer
+# now; the sync outlives this request, this CGI, and the browser tab.
+sub start_job {
+    my ($body) = @_;
+    fail("real imapsync not executable at $IMAPSYNC_REAL") unless -x $IMAPSYNC_REAL;
+
+    mkdir $JOBS_DIR, 0700 unless -d $JOBS_DIR;
+    fail("jobs dir unusable at $JOBS_DIR") unless -d $JOBS_DIR && -w $JOBS_DIR;
+    sweep_old_jobs();
+
+    my $job = new_job_id();
+    my $dir = "$JOBS_DIR/$job";
+    mkdir $dir, 0700 or fail("mkdir $dir: $!");
+
+    defined(my $pid = fork) or fail("fork: $!");
+    return $job if $pid;                # parent: answer the browser and go
+
+    # ---- supervisor ------------------------------------------------------
+    # Detach from Apache completely. Holding any of its descriptors would
+    # keep the HTTP request open — which is the exact thing we are avoiding.
+    setsid();
+    open STDIN,  '<', '/dev/null';
+    open STDOUT, '>', '/dev/null';
+    open STDERR, '>', '/dev/null';
+
+    # Body goes down a pipe, never to disk: it carries both passwords.
+    # It is a few hundred bytes, far under the pipe buffer, so this cannot
+    # block before the worker starts reading.
+    pipe(my $rd, my $wr) or exit 1;
+    defined(my $kid = fork) or exit 1;
+
+    unless ($kid) {                     # worker: imapsync, output -> log file
+        close $wr;
+        open STDIN,  '<&', $rd            or exit 1;
+        open STDOUT, '>',  "$dir/log"     or exit 1;
+        open STDERR, '>&', \*STDOUT       or exit 1;
+        exec { $IMAPSYNC_REAL } $IMAPSYNC_REAL;
+        exit 1;
+    }
+
+    close $rd;
+    print {$wr} $body;
+    close $wr;
+    waitpid $kid, 0;
+
+    # The exit file is the done flag. Written last, so imapsync-log can never
+    # report "finished" while the log still has bytes coming.
+    if (open my $fh, '>', "$dir/exit") {
+        print {$fh} ($? >> 8), "\n";
+        close $fh;
+    }
+    exit 0;
+}
+
+# Logs are kept only long enough for support to read them back.
+sub sweep_old_jobs {
+    opendir my $dh, $JOBS_DIR or return;
+    my $cutoff = time - $JOB_TTL_DAYS * 86400;
+    for my $entry (readdir $dh) {
+        next unless $entry =~ /^[0-9a-f]{32}$/;   # only ever our own dirs
+        my $dir = "$JOBS_DIR/$entry";
+        next unless -d $dir;
+        next unless (stat $dir)[9] < $cutoff;
+        unlink "$dir/log", "$dir/exit";
+        rmdir $dir;
+    }
+    closedir $dh;
+}
+
+# Allowed and short-lived (abort): run the real imapsync, feeding it the same
+# body on stdin and letting its output flow straight back to Apache.
+sub run_inline {
     my ($body) = @_;
     fail("real imapsync not executable at $IMAPSYNC_REAL") unless -x $IMAPSYNC_REAL;
 
     pipe(my $rd, my $wr) or fail("pipe: $!");
     defined(my $pid = fork) or fail("fork: $!");
 
-    unless ($pid) {                  # child: stdin <- pipe; stdout/stderr -> Apache
+    unless ($pid) {                  # child: stdin <- pipe; stdout -> Apache
         close $wr;
         open STDIN, '<&', $rd or exit 1;
         exec { $IMAPSYNC_REAL } $IMAPSYNC_REAL or exit 1;

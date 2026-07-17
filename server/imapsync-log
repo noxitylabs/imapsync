@@ -1,0 +1,116 @@
+#!/usr/bin/perl
+#
+# Noxity imapsync log tail  —  CGI
+# ================================
+# Installed at  /usr/lib/cgi-bin/imapsync-log  (public, NO auth).
+#
+# Companion to the guard. The guard starts a migration detached and hands the
+# browser a job id; this serves that job's log in chunks so the browser can
+# follow along without holding a request open past Cloudflare's 100s cap.
+#
+#   GET /cgi-bin/imapsync-log?job=<32 hex>&from=<byte offset>
+#
+#   200  body = log bytes from <offset> onwards
+#        X-Imapsync-Offset: byte offset to ask for next time
+#        X-Imapsync-Done:   1 once imapsync has exited, else 0
+#        X-Imapsync-Exit:   imapsync's exit code (only once done)
+#   400  malformed job id
+#   404  no such job (or swept: logs are kept 2 days)
+#
+# Metadata rides in headers so the log can be returned as raw bytes — no JSON
+# escaping of arbitrary log output, nothing to get wrong.
+#
+# No CPAN deps — core Perl only.
+
+use strict;
+use warnings;
+
+my $JOBS_DIR = '/var/tmp/imapsync-jobs';
+
+my %q;
+for my $pair (split /&/, ($ENV{QUERY_STRING} || '')) {
+    my ($k, $v) = split /=/, $pair, 2;
+    next unless defined $k;
+    $v = defined $v ? $v : '';
+    $v =~ tr/+/ /;
+    $v =~ s/%([0-9A-Fa-f]{2})/chr hex $1/ge;
+    $q{$k} = $v;
+}
+
+# The job id is interpolated into a path, so it is checked against exactly what
+# the guard mints and nothing else. Anything with a slash, a dot, or a stray
+# character never reaches the filesystem.
+my $job = defined $q{job} ? $q{job} : '';
+bail(400, "bad job id") unless $job =~ /^[0-9a-f]{32}$/;
+
+my $dir = "$JOBS_DIR/$job";
+bail(404, "no such job") unless -d $dir;
+
+my $from = defined $q{from} ? $q{from} : 0;
+$from = 0 unless $from =~ /^\d+$/;
+
+# Read the done flag FIRST. If imapsync has exited, everything the log will
+# ever hold is already on disk, so the size we read below is final. Checking
+# it after would let a job finish mid-request and strand the last chunk.
+my $exit = -f "$dir/exit" ? slurp("$dir/exit") : undef;
+my $done = defined $exit ? 1 : 0;
+
+my $log  = "$dir/log";
+my $size = (-f $log ? -s $log : 0) || 0;
+$from = 0 if $from > $size;              # log rotated/truncated: start over
+
+my $chunk = '';
+if ($size > $from) {
+    open my $fh, '<', $log or bail(500, "log unreadable: $!");
+    binmode $fh;
+    seek $fh, $from, 0;
+    read $fh, $chunk, $size - $from;
+    close $fh;
+}
+
+# imapsync runs in CGI mode and prints its own HTTP headers before any log
+# output. Nothing consumes them here (its stdout is a file), so drop that block
+# once, on the first read. If it hasn't landed whole yet, serve nothing and
+# leave the offset at 0 — the next poll picks it up.
+if ($from == 0 && $chunk ne '') {
+    unless ($chunk =~ s/\A.*?\r?\n\r?\n//s) {
+        $chunk = '';
+        $size  = 0;
+    }
+}
+
+print "Status: 200 OK\r\n",
+      "Content-Type: text/plain; charset=utf-8\r\n",
+      "Cache-Control: no-store\r\n",
+      "X-Imapsync-Offset: $size\r\n",
+      "X-Imapsync-Done: $done\r\n";
+print "X-Imapsync-Exit: $exit\r\n" if defined $exit;
+print "\r\n";
+
+binmode STDOUT;
+print $chunk;
+exit 0;
+
+# ---- helpers --------------------------------------------------------------
+
+sub slurp {
+    my ($path) = @_;
+    open my $fh, '<', $path or return undef;
+    local $/;
+    my $txt = <$fh>;
+    close $fh;
+    return undef unless defined $txt;
+    $txt =~ s/\s+\z//;
+    return $txt =~ /^(\d+)$/ ? $1 : undef;
+}
+
+sub bail {
+    my ($code, $msg) = @_;
+    my %text = (400 => 'Bad Request', 404 => 'Not Found',
+                500 => 'Internal Server Error');
+    print "Status: $code $text{$code}\r\n",
+          "Content-Type: text/plain; charset=utf-8\r\n",
+          "Cache-Control: no-store\r\n\r\n",
+          "$msg\n";
+    exit 0;
+}

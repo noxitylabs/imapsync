@@ -842,6 +842,10 @@ $(document).ready(function () {
     let migrationAborted = false;
     let lastEta = null;
     let syncError = null;
+    let jobId = null;       // id the guard minted for the running migration
+    let jobLog = "";        // log accumulated across polls
+    let jobOffset = 0;      // byte offset to resume the tail from
+    let pollTimer = null;
 
     // The run POST only carries an imapsync log when it returns 200. Every
     // other status is someone else answering: the guard refusing the
@@ -983,7 +987,7 @@ $(document).ready(function () {
         $("#sync-done").css({ display: "flex" });
     };
 
-    const handleRun = function handleRun(xhr, timerRefreshLog) {
+    const traceStatus = function traceStatus(xhr) {
         $("#console").text(
             "Status: " +
                 xhr.status +
@@ -994,23 +998,77 @@ $(document).ready(function () {
                 readyStateStr[xhr.readyState] +
                 "\n"
         );
+    };
 
-        const isLog = xhr.status === 200;
+    const endRun = function endRun(message) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+        syncError = message; // null on a clean finish
+        $("#bt-sync").prop("disabled", false);
+        showSyncComplete();
+    };
 
-        if (xhr.readyState === 3 && isLog) {
-            refreshLog(xhr); // live update as the log streams in
+    // The run POST no longer carries the log — it just starts the job and
+    // hands back an id (202). Anything else is the guard refusing (403) or
+    // erroring (500), or the connection failing (0).
+    const handleStart = function handleStart(xhr) {
+        traceStatus(xhr);
+        if (xhr.readyState !== 4) {
+            return;
         }
+        if (xhr.status !== 202) {
+            endRun(failureText(xhr.status));
+            return;
+        }
+        jobId = xhr.getResponseHeader("X-Imapsync-Job");
+        if (!jobId) {
+            endRun(failureText(xhr.status));
+            return;
+        }
+        jobLog = "";
+        jobOffset = 0;
+        pollTimer = setInterval(pollJob, refresh_interval_ms);
+        pollJob(); // don't make the user wait a full interval for line one
+    };
 
-        if (xhr.readyState === 4) {
-            clearInterval(timerRefreshLog);
-            if (isLog) {
-                refreshLog(xhr); // a last time
-            } else {
-                syncError = failureText(xhr.status);
+    // Tail the job's log. Each poll is its own short request, so nothing here
+    // is ever open long enough for a proxy to time it out.
+    const pollJob = function pollJob() {
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            traceStatus(xhr);
+            if (xhr.readyState !== 4) {
+                return;
             }
-            $("#bt-sync").prop("disabled", false);
-            showSyncComplete();
-        }
+            if (xhr.status !== 200) {
+                endRun(failureText(xhr.status));
+                return;
+            }
+            jobLog = jobLog + xhr.responseText;
+            const offset = Number(xhr.getResponseHeader("X-Imapsync-Offset"));
+            if (!isNaN(offset)) {
+                jobOffset = offset;
+            }
+            const done = xhr.getResponseHeader("X-Imapsync-Done") === "1";
+            // refreshLog/extract_eta read .readyState and .responseText off an
+            // xhr; the accumulated log stands in for one unchanged.
+            refreshLog({
+                readyState: done ? 4 : 3,
+                responseText: jobLog
+            });
+            if (done) {
+                endRun(null);
+            }
+        };
+        xhr.open(
+            "GET",
+            "/cgi-bin/imapsync-log?job=" +
+                encodeURIComponent(jobId) +
+                "&from=" +
+                jobOffset,
+            true
+        );
+        xhr.send();
     };
 
     const imapsync = function imapsync() {
@@ -1049,12 +1107,8 @@ $(document).ready(function () {
         querystring = querystring + "&exitonload=0";
 
         const xhr = new XMLHttpRequest();
-        const timerRefreshLog = setInterval(function () {
-            refreshLog(xhr);
-        }, refresh_interval_ms);
-
         xhr.onreadystatechange = function () {
-            handleRun(xhr, timerRefreshLog);
+            handleStart(xhr);
         };
 
         xhr.open("POST", "/cgi-bin/imapsync", true);

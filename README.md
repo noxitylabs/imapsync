@@ -19,7 +19,8 @@ separately on the server — see [Deploy from scratch](#deploy-from-scratch-debi
 | `imapsync_form.css` | All styling (the "Noxity Design System" — ink-on-paper, dark mode). |
 | `imapsync_form.js` | All behaviour: wizard steps, provider detection, validation, live progress. |
 | `noxity-ips.js` | **Config** — destination allowlist + support contact. Edit this per environment. |
-| `server/imapsync-guard` | **Server-side** CGI wrapper that enforces the allowlist (optional — see [Locking the backend](#locking-the-backend-server-side-enforcement)). |
+| `server/imapsync-guard` | **Server-side** CGI wrapper that enforces the allowlist and starts runs detached (optional — see [Locking the backend](#locking-the-backend-server-side-enforcement)). |
+| `server/imapsync-log` | Companion CGI the browser tails a running migration through (see [Long migrations](#long-migrations-status-polling)). |
 | `credits.html` | License/attribution page for imapsync (linked from the footer). |
 | `favicon.ico`, `logo_imapsync_Xn.png` | Assets. |
 
@@ -35,10 +36,15 @@ Browser ──────────────► imapsync_form_extra.html (
    │  fills the wizard
    │  POST /cgi-bin/imapsync  (user1, password1, host1, user2, …)
    ▼
-Apache ──► /usr/lib/cgi-bin/imapsync  (the imapsync Perl script in CGI mode)
-   │  streams the run log back over the same HTTP response
+Apache ──► /usr/lib/cgi-bin/imapsync
+   │  Base install: the imapsync Perl script in CGI mode, streaming the run log
+   │  back over this same response.
+   │  With the guard installed: starts imapsync detached and answers at once
+   │  with a job id, because a sync outlives what a proxy will hold open —
+   │  see Long migrations (status polling).
    ▼
-Browser polls the response, parses the `ETA:` line → % done, time left, N of M.
+Browser tails the log (GET /cgi-bin/imapsync-log?job=…&from=…, every 6s) and
+parses the `ETA:` line → % done, time left, N of M.
 ```
 
 - **Provider detection** (Gmail / Google Workspace / Microsoft 365 / Outlook /
@@ -313,10 +319,14 @@ allowlist a real control, split the single CGI in two:
 
 `server/imapsync-guard` becomes the public CGI. It re-runs the destination check
 server-side — pulls `host2` from the POST, resolves it (or takes a literal IP),
-and only execs the real imapsync if it matches an IP in `noxity-ips.js`; otherwise
+and only runs the real imapsync if it matches an IP in `noxity-ips.js`; otherwise
 it returns `403`. The real imapsync moves to `imapsync-staff`, now behind the same
 basic auth as `/bypass/`, so the unrestricted path is **staff-only instead of open
 to the world**.
+
+The guard does not stream the migration back on that request — see
+[Long migrations](#long-migrations-status-polling) for why, and for the second
+CGI (`imapsync-log`) it needs.
 
 > **Fail-closed:** unlike the browser (empty list = check disabled, for local
 > testing), the wrapper **denies everything** if `noxity-ips.js` is missing or has
@@ -332,10 +342,13 @@ checkout at `/opt/imapsync-ui`, `/bypass/` set up with `.htpasswd-bypass`).
 cp /opt/imapsync/imapsync /usr/lib/cgi-bin/imapsync-staff
 chmod 755 /usr/lib/cgi-bin/imapsync-staff
 
-# 2. Install the wrapper as the public CGI (it takes over /cgi-bin/imapsync).
+# 2. Install the wrapper as the public CGI (it takes over /cgi-bin/imapsync),
+#    plus the log tail it hands the browser off to.
 cp /opt/imapsync-ui/server/imapsync-guard /usr/lib/cgi-bin/imapsync
-chmod 755 /usr/lib/cgi-bin/imapsync
+cp /opt/imapsync-ui/server/imapsync-log   /usr/lib/cgi-bin/imapsync-log
+chmod 755 /usr/lib/cgi-bin/imapsync /usr/lib/cgi-bin/imapsync-log
 perl -c /usr/lib/cgi-bin/imapsync          # syntax sanity check
+perl -c /usr/lib/cgi-bin/imapsync-log
 
 # 3. Repoint the bypass form at the unrestricted endpoint (idempotent).
 perl -pi -e 's{/cgi-bin/imapsync(?!-staff)}{/cgi-bin/imapsync-staff}g' \
@@ -372,9 +385,14 @@ script if your paths differ.
 curl -s -X POST -d 'host2=example.com' http://localhost/cgi-bin/imapsync
 #  -> Refused: "example.com" is not a Noxity destination.
 
-# Public CGI lets an allow-listed destination through to imapsync:
-curl -s -X POST -d 'host2=<an-allow-listed-ip>' http://localhost/cgi-bin/imapsync | head
-#  -> imapsync's log (you're past the guard)
+# Public CGI lets an allow-listed destination through — it starts the job and
+# answers at once with an id (it does NOT return the log; see Long migrations):
+curl -s -D- -o /dev/null -X POST -d 'host2=<an-allow-listed-ip>' http://localhost/cgi-bin/imapsync
+#  -> 202 Accepted + X-Imapsync-Job: <32 hex>
+
+# Tail that job's log (the browser does this every 6s):
+curl -s -D- "http://localhost/cgi-bin/imapsync-log?job=<the-id>&from=0"
+#  -> 200 + X-Imapsync-Offset / X-Imapsync-Done, body = the log so far
 
 # Staff endpoint now requires auth:
 curl -s -o /dev/null -w '%{http_code}\n' -X POST http://localhost/cgi-bin/imapsync-staff   # -> 401
@@ -382,7 +400,54 @@ curl -s -u support:PASS  -X POST http://localhost/cgi-bin/imapsync-staff | head 
 ```
 
 The `/bypass/` form keeps working because it now POSTs to `imapsync-staff`; staff
-authenticate once for the form and the CGI shares the same login.
+authenticate once for the form and the CGI shares the same login. That endpoint is
+still the plain imapsync, so it streams the log on one request the old way — fine
+for support, who can watch it and are not behind the 100s cap on a long sync.
+
+---
+
+## Long migrations (status polling)
+
+Cloudflare gives up on any request that hasn't finished within **100 seconds** and
+returns [error 524](https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-524/).
+That timeout is fixed below the Enterprise plan. A mailbox sync takes minutes to
+hours, so the obvious design — one POST that streams imapsync's log until it's
+done — cannot work here: every real migration blows through the cap, the browser
+gets Cloudflare's error page instead of a log, and the sync it was watching is
+still running on the origin, invisible.
+
+So a run is **started, not streamed**:
+
+```
+POST /cgi-bin/imapsync              -> 202 + X-Imapsync-Job: <32 hex>   (instant)
+  guard checks host2, forks, setsid, exec imapsync with output -> job log file,
+  and answers immediately. The sync outlives the request, the CGI, and the tab.
+
+GET /cgi-bin/imapsync-log?job=<id>&from=<offset>                        (every 6s)
+  -> 200, body = log bytes from <offset>
+     X-Imapsync-Offset: where to resume next poll
+     X-Imapsync-Done:   1 once imapsync exited     X-Imapsync-Exit: its code
+```
+
+Every request is short, so the 100s cap is never in play — no 524, at any sync
+length. Because the browser is reading a file rather than holding a socket, it
+also survives a sleeping laptop, a dropped wifi connection, and a closed tab.
+
+Notes worth knowing:
+
+- **Jobs live in `/var/tmp/imapsync-jobs/<job id>/`** (`log` + `exit`), created
+  `0700` as `www-data`. The guard sweeps entries older than 2 days on each new
+  run — `$JOB_TTL_DAYS` in the script.
+- **The job id is the only thing authorising a read** of that log, so it's 16
+  bytes from `/dev/urandom`, and `imapsync-log` accepts nothing but 32 hex
+  characters before touching the filesystem.
+- **The POST body never hits disk** — it holds both passwords, so the guard pipes
+  it to imapsync's stdin instead. Only imapsync's own output is written, and it
+  masks passwords itself (`--password1 MASKED`).
+- **Abort still runs inline.** It only signals a PID and exits, so it's back in
+  milliseconds and needs no job.
+- **imapsync's own tmpdir is unaffected.** It keeps writing its own copy under
+  `/var/tmp/imapsync_cgi/<hash>/`; the job log is just its stdout.
 
 ---
 
