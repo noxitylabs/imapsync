@@ -724,9 +724,12 @@ $(document).ready(function () {
         $("#destLabel").css({
             display: "none"
         });
-        $("#password2").prop("disabled", true);
+        // readonly, not disabled: disabled controls are not "successful" and so
+        // are dropped by $("#form").serialize(), which would send host2 no
+        // password at all. readonly still serializes.
+        $("#password2").prop("readonly", true);
         $("#password2").val($("#password1").val());
-        $("#password1").on("input", function () {
+        $("#password1").off("input").on("input", function () {
             $("#password2").val($(this).val());
         });
         const sourceInput = $("#user1").val();
@@ -742,7 +745,7 @@ $(document).ready(function () {
         $("#password2").closest(".pw-wrap").css({
             display: "block"
         });
-        $("#password2").prop("disabled", false);
+        $("#password2").prop("readonly", false);
         $("#password2").val("");
         resetPwToggle("password2");
         $("#password1").off("input");
@@ -757,9 +760,9 @@ $(document).ready(function () {
             sel: "#password1",
             message: "Enter the source mailbox password.",
         }];
-        // password2 is disabled when the user chose "same password", so only
-        // require it when the two mailboxes use different passwords.
-        if (!$("#password2").prop("disabled")) {
+        // password2 is readonly (mirrored from password1) when the user chose
+        // "same password", so only require it when the mailboxes differ.
+        if (!$("#password2").prop("readonly")) {
             specs.push({
                 sel: "#password2",
                 message: "Enter the destination mailbox password.",
