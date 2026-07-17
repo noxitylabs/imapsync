@@ -16,7 +16,7 @@ separately on the server — see [Deploy from scratch](#deploy-from-scratch-debi
 | File | Purpose |
 |------|---------|
 | `imapsync_form_extra.html` | The custom wizard UI (entry point customers load). |
-| `imapsync_form.css` | All styling (the "Noxity Design System" — ink-on-paper, dark mode). |
+| `imapsync_form.css` | All styling — the Noxity Design System v4 (transit-signage: Geist, navy/red/warm-cream, flat and hairline-ruled). Its `--nx-*` token block is copied from the design system; keep it in sync there rather than editing it here. Dark mode re-uses the system's navy signage panel. |
 | `imapsync_form.js` | All behaviour: wizard steps, provider detection, validation, live progress. |
 | `noxity-ips.js` | **Config** — destination allowlist + support contact. Edit this per environment. |
 | `server/imapsync-guard` | **Server-side** CGI wrapper that enforces the allowlist and starts runs detached (optional — see [Locking the backend](#locking-the-backend-server-side-enforcement)). |
@@ -24,8 +24,9 @@ separately on the server — see [Deploy from scratch](#deploy-from-scratch-debi
 | `credits.html` | License/attribution page for imapsync (linked from the footer). |
 | `favicon.ico`, `logo_imapsync_Xn.png` | Assets. |
 
-No build step, no framework. It loads Tailwind, jQuery, and Font Awesome from
-CDNs and is served as static files.
+No build step, no framework. It loads Tailwind, jQuery, Geist (Google Fonts) and
+Phosphor Icons from CDNs and is served as static files. Phosphor is the design
+system's one icon set — don't mix in another.
 
 ---
 
@@ -500,8 +501,29 @@ cp imapsync_form_extra.html imapsync_form.css imapsync_form.js credits.html \
 # survive. Copy it too only when the allowlist itself changed.
 ```
 
-Then hard-refresh (Cmd/Ctrl-Shift-R) — filenames are unversioned, so browsers
-cache them.
+Then **purge the Cloudflare cache** for whatever you changed, and hard-refresh
+(Cmd/Ctrl-Shift-R). Filenames are unversioned, so both the edge and the browser
+cache them:
+
+```bash
+# Dashboard: Caching -> Configuration -> Purge Custom URLs. Or by API:
+curl -X POST "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/purge_cache" \
+  -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" \
+  --data '{"files":[
+    "https://migrate.noxity.io/imapsync_form_extra.html",
+    "https://migrate.noxity.io/imapsync_form.css",
+    "https://migrate.noxity.io/imapsync_form.js",
+    "https://migrate.noxity.io/credits.html"]}'
+```
+
+A hard-refresh alone does **not** clear the edge, and a half-updated set (fresh
+HTML, stale CSS/JS) fails in ways nothing on screen explains. Confirm what the
+edge is actually serving before you conclude anything about a deploy:
+
+```bash
+curl -s https://migrate.noxity.io/imapsync_form.css | grep -c Geist   # 0 = stale
+curl -sI https://migrate.noxity.io/imapsync_form.css | grep -i cf-cache-status
+```
 
 ---
 
