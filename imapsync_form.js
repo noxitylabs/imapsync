@@ -1191,6 +1191,13 @@ $(document).ready(function () {
         // small-RAM boxes don't get a spurious "Server is on heavy load".
         querystring = querystring + "&exitonload=0";
 
+        // Map the well-known folders (Sent, Drafts, Junk, Trash, Archive, All,
+        // Flagged) onto whatever the destination calls them. Off by default in
+        // imapsync, which copies names verbatim — so a Gmail source would land
+        // as a literal "[Gmail]/Sent Mail" folder and the new mailbox's own
+        // Sent would look empty to the customer.
+        querystring = querystring + "&automap=on";
+
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function () {
             handleStart(xhr);
