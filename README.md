@@ -76,14 +76,50 @@ window.NOXITY_SUPPORT = "mailto:support@noxity.io";   // shown on every modal
 
 ## Local preview
 
+### Whole thing, migration included
+
+```bash
+python3 server/dev-server.py
+# open http://127.0.0.1:8799/imapsync_form_extra.html
+```
+
+Serves the UI and runs the **real** `imapsync-guard` and `imapsync-log`, so the
+allowlist check, the detached job start and the log tailing are all exercised.
+Only imapsync itself is faked — it replays a realistic log, so there's no IMAP
+server, no credentials, and nothing to clean up. A full run takes ~35s and walks
+the whole status sequence:
+
+```
+Connecting…  ->  Counting messages in your current mailbox (12 folders)…
+->  Reading INBOX.Sent (4,567 messages)…  ->  Copying INBOX.Sent — 4,180 of 4,567
+->  Migration complete
+```
+
+In the wizard use **`one.one.one.one`** as the destination host. Browser and
+guard both check the destination and both read the dev allowlist the script
+serves, and that's the hostname they accept. Source host and passwords can be
+anything; nothing connects anywhere.
+
+Runs on **8799**, not the static preview's 8765, and stamps a token onto the
+asset URLs. Both are cache defences: a page cached from an `http.server` on 8765
+would otherwise shadow this one and silently serve the real allowlist, and the
+wizard would refuse every destination for reasons nothing on screen explains.
+
+The scripts have production paths baked in (`/usr/lib/cgi-bin`, `/var/www/html`,
+`/var/tmp`), so they're copied to a temp dir with those three rewritten and
+nothing else — what runs is otherwise byte-for-byte what deploys. The sandbox is
+printed at startup and removed on ctrl-c.
+
+### Static only
+
 ```bash
 python3 -m http.server 8765
 # open http://localhost:8765/imapsync_form_extra.html
 ```
 
-The wizard renders and you can click through it. The actual migration won't run
-(there's no CGI locally) — "Begin migration" will just fail the POST. To preview
-without the allowlist blocking you, set `NOXITY_DEST_IPS = []` temporarily.
+The wizard renders and you can click through it, but "Begin migration" fails the
+POST — there's no CGI. To get that far without the allowlist blocking you, set
+`NOXITY_DEST_IPS = []` temporarily.
 
 ---
 
