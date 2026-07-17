@@ -842,6 +842,7 @@ $(document).ready(function () {
     let migrationAborted = false;
     let lastEta = null;
     let syncError = null;
+    let lastPhase = null;   // newest status parsed out of the log
     let jobId = null;       // id the guard minted for the running migration
     let jobLog = "";        // log accumulated across polls
     let jobOffset = 0;      // byte offset to resume the tail from
@@ -897,6 +898,82 @@ $(document).ready(function () {
         }
     };
 
+    // imapsync narrates its run in detail, and most of it happens before the
+    // first ETA line — on a big mailbox that's minutes of apparent silence.
+    // These are the lines worth turning into a status, in the order a run
+    // emits them. Only lines imapsync prints unconditionally are listed:
+    // anything behind --debug (e.g. "++++ Verifying [x] -> [y]") never arrives.
+    const LOG_PHASES = [
+        [/^Host1: probing ssl/, function () {
+            return "Checking your current mail server…";
+        }],
+        [/^Host1: success login/, function () {
+            return "Signed in to your current mailbox…";
+        }],
+        [/^Host2: success login/, function () {
+            return "Signed in to your new mailbox…";
+        }],
+        [/^Host1: folders list/, function () {
+            return "Reading your folder list…";
+        }],
+        [/^Host2: folders list/, function () {
+            return "Reading your new mailbox's folders…";
+        }],
+        [/^Folders mapping from --automap/, function () {
+            return "Matching up folder names…";
+        }],
+        [/^\+\+\+\+ Calculating sizes of (\d+) folders on Host1/, function (m) {
+            return "Counting messages in your current mailbox (" +
+                fmtInt(m[1]) + " folders)…";
+        }],
+        [/^Host1 Nb messages:\s+(\d+) messages/, function (m) {
+            return "Found " + fmtInt(m[1]) + " messages to migrate…";
+        }],
+        [/^\+\+\+\+ Calculating sizes of (\d+) folders on Host2/, function () {
+            return "Checking what's already in your new mailbox…";
+        }],
+        [/^Host2 Nb messages:\s+(\d+) messages/, function (m) {
+            return fmtInt(m[1]) + " already in your new mailbox…";
+        }],
+        [/^\+\+\+\+ Looping on each one of (\d+) folders to sync/, function (m) {
+            return "Starting on " + fmtInt(m[1]) + " folders…";
+        }],
+        [/^Host1: folder \[([^\]]+)\] selected (\d+) messages/, function (m) {
+            return "Reading " + m[1] + " (" + fmtInt(m[2]) + " messages)…";
+        }],
+        [/^Host2: folder \[([^\]]+)\] selected (\d+) messages/, function (m) {
+            return "Checking " + m[1] + " for messages already copied…";
+        }],
+        [/^msg (\S+)\/\S+ .*copied to /, function (m) {
+            return "Copying " + m[1];
+        }],
+        [/^\+\+\+\+ End looping on each folder/, function () {
+            return "Finishing up…";
+        }],
+        [/^\+\+\+\+ Statistics/, function () {
+            return "Wrapping up…";
+        }]
+    ];
+
+    // Reads only the newly-arrived bytes, so this stays cheap however long the
+    // log grows, and the phase sticks between markers instead of flickering
+    // back to nothing during a long stretch of "msg ... copied" lines.
+    const detectPhase = function detectPhase(chunk) {
+        const lines = chunk.split("\n");
+        let found = null;
+        lines.forEach(function (line) {
+            LOG_PHASES.some(function (phase) {
+                const m = line.match(phase[0]);
+                if (m) {
+                    found = phase[1](m);
+                    return true;
+                }
+                return false;
+            });
+        });
+        return found; // the last marker in this chunk
+    };
+
     const refreshLog = function refreshLog(xhr) {
         const eta_obj = extract_eta(xhr);
         const hasEta = Boolean(eta_obj.str && eta_obj.str.length);
@@ -920,16 +997,19 @@ $(document).ready(function () {
                 format_eta(eta_obj.seconds_left) || "Estimating time…"
             );
             $("#progress-msgs").text(
-                fmtInt(eta_obj.msgs_done()) +
+                (lastPhase ? lastPhase + " — " : "") +
+                    fmtInt(eta_obj.msgs_done()) +
                     " of " +
                     fmtInt(eta_obj.msgs_total) +
-                    " e-mails copied"
+                    " e-mails"
             );
         } else {
+            // Everything before the first ETA line: connecting, listing and
+            // counting. Minutes of it on a big mailbox, so say what's going on.
             $("#progress-bar-done").addClass("indeterminate");
             $("#progress-percent").text("…");
             $("#progress-eta").text("Starting migration…");
-            $("#progress-msgs").text("Connecting and counting messages…");
+            $("#progress-msgs").text(lastPhase || "Connecting…");
         }
         const last_lines = last_x_lines(
             sanitizeLog(xhr.responseText).slice(-2000),
@@ -1044,6 +1124,10 @@ $(document).ready(function () {
                 endRun(failureText(xhr.status));
                 return;
             }
+            const phase = detectPhase(xhr.responseText); // the new bytes only
+            if (phase) {
+                lastPhase = phase;
+            }
             jobLog = jobLog + xhr.responseText;
             const offset = Number(xhr.getResponseHeader("X-Imapsync-Offset"));
             if (!isNaN(offset)) {
@@ -1076,6 +1160,7 @@ $(document).ready(function () {
         migrationAborted = false;
         lastEta = null;
         syncError = null;
+        lastPhase = null;
         $("#sync-done").css({ display: "none" });
         $("#bt-abort").removeClass("hidden").prop("disabled", false);
         $("#progress-percent").text("…");
