@@ -841,6 +841,25 @@ $(document).ready(function () {
 
     let migrationAborted = false;
     let lastEta = null;
+    let syncError = null;
+
+    // The run POST only carries an imapsync log when it returns 200. Every
+    // other status is someone else answering: the guard refusing the
+    // destination (403) or erroring (500), Cloudflare giving up at its 100s
+    // proxy cap (524), or the connection dropping (0). Their bodies are not
+    // logs and must not be rendered as one.
+    const failureText = function failureText(status) {
+        if (403 === status) {
+            return "That destination isn't a Noxity mail server, so the migration was refused. Check the destination host and try again.";
+        }
+        if (524 === status) {
+            return "The connection to the server timed out, but your migration was not stopped — it is still running. Contact support for the final log.";
+        }
+        if (0 === status) {
+            return "The connection to the server dropped. Your migration may still be running — contact support before starting over.";
+        }
+        return "The server returned an unexpected error (HTTP " + status + "). Your migration may not have started.";
+    };
 
     const fmtInt = function fmtInt(n) {
         const v = Number(n);
@@ -921,7 +940,15 @@ $(document).ready(function () {
         $("#toggleConsole").text("Show logs").attr("aria-expanded", "false");
         $("#bt-abort").addClass("hidden");
 
-        if (migrationAborted) {
+        if (syncError) {
+            $("#progress-bar-done").removeClass("indeterminate");
+            $("#progress-eta").text("Migration interrupted");
+            $("#sync-done-icon").attr("class", "fa-solid fa-circle-xmark sync-done-icon stopped");
+            $("#sync-done-title").text("Migration interrupted");
+            $("#sync-done-sub").text(syncError);
+            $("#bt-artifact").text("Try again");
+            $("#artifact-hint").addClass("hidden");
+        } else if (migrationAborted) {
             $("#progress-eta").text("Migration stopped");
             $("#sync-done-icon").attr("class", "fa-solid fa-circle-xmark sync-done-icon stopped");
             $("#sync-done-title").text("Migration stopped");
@@ -968,13 +995,19 @@ $(document).ready(function () {
                 "\n"
         );
 
-        if (xhr.readyState === 3) {
+        const isLog = xhr.status === 200;
+
+        if (xhr.readyState === 3 && isLog) {
             refreshLog(xhr); // live update as the log streams in
         }
 
         if (xhr.readyState === 4) {
             clearInterval(timerRefreshLog);
-            refreshLog(xhr); // a last time
+            if (isLog) {
+                refreshLog(xhr); // a last time
+            } else {
+                syncError = failureText(xhr.status);
+            }
             $("#bt-sync").prop("disabled", false);
             showSyncComplete();
         }
@@ -984,6 +1017,7 @@ $(document).ready(function () {
         // Fresh run: reset completion/abort state and the progress header.
         migrationAborted = false;
         lastEta = null;
+        syncError = null;
         $("#sync-done").css({ display: "none" });
         $("#bt-abort").removeClass("hidden").prop("disabled", false);
         $("#progress-percent").text("…");
