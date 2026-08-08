@@ -800,6 +800,28 @@ body > header p strong { color: var(--nx-text); font-weight: var(--nx-fw-semi); 
     word-break: break-word;
 }
 
+/* Live warning during a run — the destination's storage limit, the one
+   thing the customer can still fix while the copy is going. Degraded,
+   not down, so it takes amber and leaves red for a failed migration. */
+.run-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0;
+    padding: var(--nx-space-3);
+    border: 1px solid var(--nx-status-degraded);
+    color: var(--nx-text);
+    font-family: var(--nx-font);
+    font-size: 14px;
+    line-height: var(--nx-lh-body);
+    text-align: left;
+}
+.run-alert i { color: var(--nx-status-degraded); margin-top: 2px; }
+/* Amber lifted off navy, same treatment the red text gets in dark mode. */
+[data-theme="dark"] .run-alert { border-color: #E0A82E; }
+[data-theme="dark"] .run-alert i,
+[data-theme="dark"] .sync-done-icon.warned { color: #E0A82E; }
+
 /* Completion panel (shown when the sync finishes). JS sets its
    display — don't declare it here. */
 .sync-done {
@@ -812,6 +834,8 @@ body > header p strong { color: var(--nx-text); font-weight: var(--nx-fw-semi); 
 /* A real status, and never beside its opposite → green/red hold. */
 .sync-done-icon { color: var(--nx-status-ok); font-size: 40px; }
 .sync-done-icon.stopped { color: var(--nx-red-text); }
+/* Half-copied is degraded, not down — amber, and red stays meaningful. */
+.sync-done-icon.warned { color: var(--nx-status-degraded); }
 .sync-done-title {
     font-family: var(--nx-font);
     font-weight: var(--nx-fw-bold);

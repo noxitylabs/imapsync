@@ -31,23 +31,63 @@ TOKEN = TMP.name.rsplit("-", 1)[-1]
 
 # A stand-in imapsync: replays real log lines (formats taken from imapsync's
 # source) over ~20s so the status line and ETA parsing have something to chew.
+#
+# Put "fail:<name>" in the SOURCE PASSWORD to replay a failing run instead —
+# see FAIL_SCENARIOS below. The UI reads imapsync's exit code and the error
+# lines it prints, and neither can be exercised by a run that always succeeds.
 FAKE_IMAPSYNC = r'''#!/usr/bin/perl
 use strict; use warnings;
 $| = 1;
 my $body = do { local $/; <STDIN> };
-my %p = map { my ($k,$v) = split /=/, $_, 2; ($k => (defined $v ? $v : '')) } split /&/, ($body // '');
+sub urldecode { my $s = shift // ''; $s =~ tr/+/ /; $s =~ s/%([0-9A-Fa-f]{2})/chr hex $1/ge; return $s }
+my %p = map { my ($k,$v) = split /=/, $_, 2; ($k => urldecode($v)) } split /&/, ($body // '');
 my $masked = join ' ', map { "--$_ " . ($_ =~ /^password/ ? 'MASKED' : ($p{$_} // '')) } sort keys %p;
+my $fail = ( ( $p{password1} // '' ) =~ /^fail:(\w+)$/ ) ? $1 : '';
 print "Content-Type: text/plain\r\n\r\n";
 print "Transfer started at Friday 17 July 2026\n";
 print "Command line used:\n $masked\n";
+
+# Finish exactly the way imapsync does: list the errors, name the most
+# frequent one, then print the return value it is about to exit with.
+sub bail_out {
+  my ( $code, $type, $nb, $comment ) = @_;
+  print "++++ Listing $nb errors encountered during the sync ( avoid this listing with --noerrorsdump ).\n";
+  print "The most frequent error is $type. $comment\n";
+  print "Exiting with return value $code ($type) $nb/500 nb_errors/max_errors PID $$\n";
+  exit $code;
+}
+
+# Login failures end the run before anything is copied. imapsync tries BOTH
+# logins and only then gives up, which is what lets the UI tell "wrong
+# password" apart from "the two mailboxes are the wrong way round".
+if ( $fail =~ /^(?:swap|auth1|auth2)$/ ) {
+  my ( $bad1, $bad2 ) = ( $fail ne 'auth2', $fail ne 'auth1' );
+  print "Host1: probing ssl on port 993\n";
+  for my $s ( [ 1, $bad1, $p{host1}, $p{user1} ], [ 2, $bad2, $p{host2}, $p{user2} ] ) {
+    my ( $n, $bad, $host, $user ) = @{ $s };
+    sleep 1;
+    print $bad
+      ? "Host$n failure: Error login on [$host] with user [$user] auth [LOGIN]: 2 NO [AUTHENTICATIONFAILED] Authentication failed.\n"
+      : "Host$n: success login on [$host] with user [$user] auth [LOGIN]\n";
+  }
+  bail_out( $bad1 ? 161 : 162, 'ERR_AUTHENTICATION_FAILURE_USER' . ( $bad1 ? 1 : 2 ),
+            $bad1 + $bad2, 'Check the credentials.' );
+}
+
 my @script = (
   [ 0, "Host1: probing ssl on port 993\n" ],
   [ 1, "Host1: success login on [$p{host1}] with user [$p{user1}] auth [LOGIN]\n" ],
   [ 1, "Host2: success login on [$p{host2}] with user [$p{user2}] auth [LOGIN]\n" ],
+  # quota() runs on host2 right after login, every run.
+  [ 0, "Host2: Quota current storage is 9663676416 bytes. Limit is 10737418240 bytes. So "
+       . ( $fail eq 'quota' ? '90.00' : '12.00' ) . " % full\n" ],
+  [ 0, ( $fail eq 'quota' ? "Host2: 90.00 % full: it is time to find a bigger place! ( 9663676416 bytes / 10737418240 bytes )\n" : "" ) ],
   [ 1, "Host1: folders list (first the raw imap format then the [X] = [Y]):\n" ],
   [ 1, ($p{automap} ? "Folders mapping from --automap feature (use --f1f2 to override any mapping):\nINBOX.Sent -> INBOX.Sent Messages\nINBOX.Drafts -> Drafts\n" : "") ],
   [ 1, "++++ Calculating sizes of 12 folders on Host1\n" ],
   [ 2, "Host1 Nb messages:                68179 messages\n" ],
+  # The overflow is predicted here, once host1's total is known.
+  [ 0, ( $fail eq 'quota' ? "Host2: Quota limit will be exceeded! Over 340 % ( 36507222016 bytes / 10737418240 bytes )\n" : "" ) ],
   [ 1, "++++ Calculating sizes of 12 folders on Host2\n" ],
   [ 1, "Host2 Nb messages:                    0 messages\n" ],
   [ 1, "++++ Looping on each one of 12 folders to sync\n" ],
@@ -61,12 +101,37 @@ for my $i ( 1 .. 6 ) {
   my $left = 4567 - $done;
   printf "msg INBOX.Sent/%d {7451}          copied to INBOX.Sent Messages/%d        1.73 msgs/s  26.953 KiB/s 2.095 MiB copied ETA: Wed Jul  3 14:55:27 2019  %d s  %d/4567 msgs left\n",
     $i, $i, $left * 2, $left;
+  # Once the destination is really full the server refuses each message.
+  print "Host2 folder INBOX.Sent Messages: could not append ( Subject:[Re: invoice], Size:[7451] ) to folder INBOX.Sent Messages: 275 NO [OVERQUOTA] Not enough disk quota\n"
+    if ( $fail eq 'quota' && $i >= 4 );
 }
 print "++++ End looping on each folder\n++++ Statistics\n";
+
+my %end = (
+  quota  => [ 113, 'ERR_OVERQUOTA',    3, 'The destination mailbox is 100% full, get free space on it and then resume the sync.' ],
+  toobig => [ 114, 'ERR_APPEND_SIZE',  2, 'The destination server refuses too big messages. Use --truncmess option.' ],
+  errors => [ 111, 'ERR_UNCLASSIFIED', 4, '' ],
+  virus  => [ 119, 'ERR_APPEND_VIRUS', 1, '' ],
+  flags  => [ 120, 'ERR_FLAGS',        9, 'Many STORE errors with FLAGS. Retry with the option --noresyncflags' ],
+);
+bail_out( @{ $end{$fail} } ) if $end{$fail};
+
 print "The sync looks good, all 4567 identified messages in host1 are on host2.\n";
 print "Exiting with return value 0 (EX_OK: successful termination)\n";
 exit 0;
 '''
+
+# Source password -> what the fake replays. Printed on startup.
+FAIL_SCENARIOS = [
+    ("fail:swap",   "both mailboxes reject the password -> offer to swap the accounts"),
+    ("fail:auth1",  "only the current mailbox rejects the password"),
+    ("fail:auth2",  "only the new mailbox rejects the password"),
+    ("fail:quota",  "destination fills up -> live alert, then out-of-space at the end"),
+    ("fail:toobig", "the new server refuses oversized messages"),
+    ("fail:errors", "finishes with some messages uncopied"),
+    ("fail:virus",  "the new server's virus scanner refuses messages"),
+    ("fail:flags",  "everything copies, read/unread marks don't"),
+]
 
 
 def build():
@@ -191,6 +256,9 @@ if __name__ == "__main__":
     print("      destination host : one.one.one.one   (resolves to 1.1.1.1)")
     print("      source host      : anything, e.g. mail.example.com")
     print("      passwords        : anything — imapsync is faked, nothing connects")
+    print("\n  To replay a failing run, put one of these in the SOURCE password:")
+    for pw, what in FAIL_SCENARIOS:
+        print(f"      {pw:<14} {what}")
     print("\n  (ctrl-c to stop; the sandbox dir is removed on exit)\n")
     try:
         http.server.ThreadingHTTPServer(("127.0.0.1", PORT), H).serve_forever()

@@ -323,8 +323,12 @@ $(document).ready(function () {
         primary: "Got it",
     };
 
+    // Action the modal's primary button runs once, if the modal carries one.
+    let modalPrimary = null;
+
     function fillModal(info) {
         const support = window.NOXITY_SUPPORT || "mailto:support@noxity.io";
+        modalPrimary = info.onPrimary || null;
         $("#modal-title").text(info.title);
         $("#modal-body").text(info.body);
         const $list = $("#modal-steps").empty();
@@ -353,6 +357,47 @@ $(document).ready(function () {
 
     function showRejectModal() {
         fillModal(REJECT_INFO);
+        $("#tos-modal").css({ display: "flex" });
+    }
+
+    /* ===== Source/destination the wrong way round ====================== */
+
+    // The wizard's whole premise is "current mailbox on the left, new one on
+    // the right", and people do fill it in backwards. This is the undo.
+    const swapFields = function swapFields(pairs) {
+        pairs.forEach(function (pair) {
+            const $a = $("#" + pair[0]);
+            const $b = $("#" + pair[1]);
+            const tmp = $a.val();
+            $a.val($b.val());
+            $b.val(tmp);
+        });
+    };
+
+    const SWAP_INFO = {
+        title: "Your two servers look the wrong way round",
+        body: "The server you entered as the destination isn't one of ours — but the one you entered as the source is. That normally means the two sides of the form were filled in the other way round.",
+        steps: [
+            "Source is the mailbox you're moving away from.",
+            "Destination is your new Noxity mailbox.",
+            "We can swap the two sides over — check the details before you start.",
+        ],
+        guideLabel: null,
+        guideHref: null,
+        primary: "Swap them over",
+        onPrimary: function () {
+            swapFields([
+                ["host1", "host2"],
+                ["user1", "user2"],
+                ["password1", "password2"],
+            ]);
+            $("#oldM").text($("#user1").val());
+            $("#newM").text($("#user2").val());
+        },
+    };
+
+    function showSwapModal() {
+        fillModal(SWAP_INFO);
         $("#tos-modal").css({ display: "flex" });
     }
 
@@ -780,6 +825,11 @@ $(document).ready(function () {
         $("#tos-modal").css({
             display: "none"
         });
+        if (modalPrimary) {
+            const run = modalPrimary;
+            modalPrimary = null;   // clear first: the action must not re-fire
+            run();
+        }
     });
 
     const tests_last_eta = function tests_last_eta() {
@@ -841,8 +891,10 @@ $(document).ready(function () {
 
     let migrationAborted = false;
     let lastEta = null;
-    let syncError = null;
+    let syncError = null;   // {title, sub, action, fix, partial} once a run fails
     let lastPhase = null;   // newest status parsed out of the log
+    let lastAlert = null;   // newest live warning parsed out of the log
+    let pendingFix = null;  // what the completion panel's button repairs first
     let jobId = null;       // id the guard minted for the running migration
     let jobLog = "";        // log accumulated across polls
     let jobOffset = 0;      // byte offset to resume the tail from
@@ -853,17 +905,29 @@ $(document).ready(function () {
     // destination (403) or erroring (500), Cloudflare giving up at its 100s
     // proxy cap (524), or the connection dropping (0). Their bodies are not
     // logs and must not be rendered as one.
-    const failureText = function failureText(status) {
+    const transportFailure = function transportFailure(status) {
         if (403 === status) {
-            return "That destination isn't a Noxity mail server, so the migration was refused. Check the destination host and try again.";
+            return {
+                title: "Migration refused",
+                sub: "That destination isn't a Noxity mail server, so the migration was refused. Check the destination host and try again."
+            };
         }
         if (524 === status) {
-            return "The connection to the server timed out, but your migration was not stopped — it is still running. Contact support for the final log.";
+            return {
+                title: "Lost contact with the server",
+                sub: "The connection to the server timed out, but your migration was not stopped — it is still running. Contact support for the final log."
+            };
         }
         if (0 === status) {
-            return "The connection to the server dropped. Your migration may still be running — contact support before starting over.";
+            return {
+                title: "Connection dropped",
+                sub: "The connection to the server dropped. Your migration may still be running — contact support before starting over."
+            };
         }
-        return "The server returned an unexpected error (HTTP " + status + "). Your migration may not have started.";
+        return {
+            title: "Migration failed to start",
+            sub: "The server returned an unexpected error (HTTP " + status + "). Your migration may not have started."
+        };
     };
 
     const fmtInt = function fmtInt(n) {
@@ -955,23 +1019,192 @@ $(document).ready(function () {
         }]
     ];
 
+    // Problems worth interrupting the customer about *while the run is still
+    // going*, because they are the ones they can still fix from the other
+    // side: the destination's storage limit. imapsync checks the quota right
+    // after login, predicts the overflow once it has counted host1, and
+    // reports [OVERQUOTA] per message once the server starts refusing them.
+    // Listed weakest first — later markers arrive later and take over.
+    const LOG_ALERTS = [
+        [/^Host2: ([\d.]+) % full: it is time to find a bigger place/, function (m) {
+            return "Your new mailbox is " + Math.round(Number(m[1])) +
+                "% full. Raise its storage limit before the migration runs out of room.";
+        }],
+        [/^Host2: Quota limit will be exceeded! Over (\d+) %/, function (m) {
+            return "Your new mailbox is too small for this migration — your e-mail needs about " +
+                m[1] + "% of the space it has. Raise its storage limit now and the copy keeps going.";
+        }],
+        [/OVERQUOTA/, function () {
+            return "Your new mailbox is out of space, so the server is refusing messages. Raise its storage limit — nothing already copied is lost, and a second run picks up the rest.";
+        }]
+    ];
+
     // Reads only the newly-arrived bytes, so this stays cheap however long the
     // log grows, and the phase sticks between markers instead of flickering
     // back to nothing during a long stretch of "msg ... copied" lines.
-    const detectPhase = function detectPhase(chunk) {
-        const lines = chunk.split("\n");
+    function detect(markers, chunk) {
         let found = null;
-        lines.forEach(function (line) {
-            LOG_PHASES.some(function (phase) {
-                const m = line.match(phase[0]);
+        chunk.split("\n").forEach(function (line) {
+            markers.some(function (marker) {
+                const m = line.match(marker[0]);
                 if (m) {
-                    found = phase[1](m);
+                    found = marker[1](m);
                     return true;
                 }
                 return false;
             });
         });
         return found; // the last marker in this chunk
+    }
+
+    // imapsync classifies its own failures: it exits with a code per error
+    // type (its %EXIT_TXT table), the guard writes that code down beside the
+    // log, and imapsync-log hands it back as X-Imapsync-Exit. Without this the
+    // completion panel congratulates the customer on a migration that failed.
+    //
+    // "partial" marks the ones where the copy did run and most of it landed —
+    // they get a warning, not a red cross, and re-running finishes the job
+    // (imapsync only copies what is missing).
+    const SYNC_FAILURES = {
+        6: {   // EXIT_BY_SIGNAL
+            title: "Migration was interrupted",
+            sub: "Something stopped the migration before it finished. Nothing was deleted on either side — run it again and it picks up where it left off.",
+            partial: true
+        },
+        10: {  // EXIT_CONNECTION_FAILURE
+            title: "Couldn't reach a mail server",
+            sub: "One of the two servers didn't answer. Check both server addresses — they usually look like mail.yourdomain.com."
+        },
+        101: { // EXIT_CONNECTION_FAILURE_HOST1
+            title: "Couldn't reach your current mail server",
+            sub: "The server you're moving away from didn't answer. Check its address — your old provider's help pages list the right IMAP server."
+        },
+        102: { // EXIT_CONNECTION_FAILURE_HOST2
+            title: "Couldn't reach your new mail server",
+            sub: "The destination server didn't answer. Check the address, or contact support and we'll confirm the right one."
+        },
+        12: {  // EXIT_TLS_FAILURE
+            title: "Couldn't set up a secure connection",
+            sub: "The server refused an encrypted connection. That's usually the wrong server address or port — check both and try again."
+        },
+        16: {  // EXIT_AUTHENTICATION_FAILURE
+            title: "Sign-in was rejected",
+            sub: "A mailbox turned down the password it was given. Check both passwords and try again."
+        },
+        161: { // EXIT_AUTHENTICATION_FAILURE_USER1
+            title: "Your current mailbox rejected the sign-in",
+            sub: "The address and password for the mailbox you're moving away from weren't accepted. If that provider uses two-factor authentication, you need an app password rather than your normal one."
+        },
+        162: { // EXIT_AUTHENTICATION_FAILURE_USER2
+            title: "Your new mailbox rejected the sign-in",
+            sub: "The address and password for the new mailbox weren't accepted. Check them, or contact support to have the password reset."
+        },
+        111: { // EXIT_WITH_ERRORS
+            title: "Migration finished, but not everything copied",
+            sub: "Most of your e-mail is across; some messages were refused along the way. Run it again — only what's missing gets copied.",
+            partial: true
+        },
+        112: { // EXIT_WITH_ERRORS_MAX
+            title: "Migration stopped after too many errors",
+            sub: "The new server kept refusing messages, so the copy gave up early. The log has the reason — send it to support and we'll sort it out.",
+            partial: true
+        },
+        113: { // EXIT_OVERQUOTA
+            title: "Your new mailbox is out of space",
+            sub: "The migration filled the new mailbox's storage limit, so the rest couldn't be copied. Raise the limit, then run it again — it carries on from where it stopped.",
+            partial: true
+        },
+        114: { // EXIT_ERR_APPEND
+            title: "The new server refused some messages",
+            sub: "Everything else copied across. Run it again to retry them — if they're refused a second time, send us the log.",
+            partial: true
+        },
+        115: { // EXIT_ERR_FETCH
+            title: "Couldn't read some messages from your current mailbox",
+            sub: "Your old server failed to hand over some e-mails. Run it again — it only retries what's missing.",
+            partial: true
+        },
+        116: { // EXIT_ERR_CREATE
+            title: "Couldn't create some folders in the new mailbox",
+            sub: "The new server rejected some folder names, or ran out of room for them. Check the mailbox's storage limit and try again.",
+            partial: true
+        },
+        117: { // EXIT_ERR_SELECT
+            title: "Couldn't open some folders in the new mailbox",
+            sub: "The new server refused access to folders the migration needed. Run it again, or contact support with the log.",
+            partial: true
+        },
+        118: { // EXIT_TRANSFER_EXCEEDED
+            title: "This run hit its transfer limit",
+            sub: "There's a cap on how much one run may move. Nothing is lost — run it again to continue from where it stopped.",
+            partial: true
+        },
+        119: { // EXIT_ERR_APPEND_VIRUS
+            title: "The new server's virus scanner refused some messages",
+            sub: "Everything else copied across. Those messages have to be moved by hand — contact support if you need them.",
+            partial: true
+        },
+        120: { // EXIT_ERR_FLAGS
+            title: "Your e-mail copied, but read/unread marks didn't",
+            sub: "Nothing is missing — the new server just refused some of the read, unread and starred marks. Run it again if you want them retried.",
+            partial: true
+        },
+        64: {  // EX_USAGE
+            title: "Migration couldn't start",
+            sub: "The server refused the request before it began. Contact support — this one is ours to fix."
+        },
+        69: {  // EX_UNAVAILABLE
+            title: "The migration server is busy",
+            sub: "It turned this run away rather than start it. Wait a few minutes and try again, or contact support."
+        }
+    };
+
+    const CATCH_ALL_FAILURE = {
+        title: "Migration failed",
+        sub: "The copy stopped before it finished. Open Show logs for the details — send them to support and we'll take a look."
+    };
+
+    // A side only truly failed to sign in if it never reported a success:
+    // imapsync logs a failure and then retries with plain LOGIN, so the
+    // failure line alone doesn't mean the mailbox was locked out.
+    const loginFailed = function loginFailed(log, side) {
+        return log.indexOf(side + " failure: Error login on") !== -1 &&
+            log.indexOf(side + ": success login on") === -1;
+    };
+
+    const diagnoseFailure = function diagnoseFailure(exit, log) {
+        // Both mailboxes turning down their password isn't two bad passwords,
+        // it's one form filled in backwards. imapsync attempts both logins
+        // before it gives up, so a single run shows both failures — and since
+        // the destination already passed the Noxity check, it's the accounts
+        // that are swapped, not the servers.
+        if (loginFailed(log, "Host1") && loginFailed(log, "Host2")) {
+            const u1 = ($("#user1").val() || "your first address").trim();
+            const u2 = ($("#user2").val() || "your second address").trim();
+            return {
+                title: "Are your two mailboxes the wrong way round?",
+                sub: "Neither mailbox accepted its password. " + u1 +
+                    " is set as the mailbox you're moving away from and " + u2 +
+                    " as the new one — swap them and we'll try again.",
+                action: "Swap the accounts and retry",
+                fix: function () {
+                    swapFields([
+                        ["user1", "user2"],
+                        ["password1", "password2"],
+                    ]);
+                }
+            };
+        }
+        // 114 covers every kind of refusal; imapsync's own classification is
+        // the only thing that separates "too big" from the rest.
+        if (114 === exit && log.indexOf("most frequent error is ERR_APPEND_SIZE") !== -1) {
+            return {
+                title: "Some e-mails are too big for the new server",
+                sub: "The new server caps how large a single message may be and turned down the biggest ones. Everything else copied across — contact support to have the cap raised.",
+                partial: true
+            };
+        }
+        return SYNC_FAILURES[exit] || CATCH_ALL_FAILURE;
     };
 
     const refreshLog = function refreshLog(xhr) {
@@ -1025,12 +1258,21 @@ $(document).ready(function () {
         $("#bt-abort").addClass("hidden");
 
         if (syncError) {
+            // Half-copied is not the same failure as never-started: a partial
+            // run gets a warning and a "run it again", not a red cross.
+            const partial = Boolean(syncError.partial);
+            pendingFix = syncError.fix || null;
             $("#progress-bar-done").removeClass("indeterminate");
-            $("#progress-eta").text("Migration interrupted");
-            $("#sync-done-icon").attr("class", "ph-bold ph-x-circle sync-done-icon stopped");
-            $("#sync-done-title").text("Migration interrupted");
-            $("#sync-done-sub").text(syncError);
-            $("#bt-artifact").text("Try again");
+            $("#progress-eta").text(partial ? "Finished with errors" : "Migration stopped");
+            $("#sync-done-icon").attr(
+                "class",
+                partial
+                    ? "ph-bold ph-warning-circle sync-done-icon warned"
+                    : "ph-bold ph-x-circle sync-done-icon stopped"
+            );
+            $("#sync-done-title").text(syncError.title);
+            $("#sync-done-sub").text(syncError.sub);
+            $("#bt-artifact").text(syncError.action || "Try again");
             $("#artifact-hint").addClass("hidden");
         } else if (migrationAborted) {
             $("#progress-eta").text("Migration stopped");
@@ -1080,10 +1322,10 @@ $(document).ready(function () {
         );
     };
 
-    const endRun = function endRun(message) {
+    const endRun = function endRun(failure) {
         clearInterval(pollTimer);
         pollTimer = null;
-        syncError = message; // null on a clean finish
+        syncError = failure; // null on a clean finish
         $("#bt-sync").prop("disabled", false);
         showSyncComplete();
     };
@@ -1097,12 +1339,12 @@ $(document).ready(function () {
             return;
         }
         if (xhr.status !== 202) {
-            endRun(failureText(xhr.status));
+            endRun(transportFailure(xhr.status));
             return;
         }
         jobId = xhr.getResponseHeader("X-Imapsync-Job");
         if (!jobId) {
-            endRun(failureText(xhr.status));
+            endRun(transportFailure(xhr.status));
             return;
         }
         jobLog = "";
@@ -1121,12 +1363,18 @@ $(document).ready(function () {
                 return;
             }
             if (xhr.status !== 200) {
-                endRun(failureText(xhr.status));
+                endRun(transportFailure(xhr.status));
                 return;
             }
-            const phase = detectPhase(xhr.responseText); // the new bytes only
+            const phase = detect(LOG_PHASES, xhr.responseText); // new bytes only
             if (phase) {
                 lastPhase = phase;
+            }
+            const alert = detect(LOG_ALERTS, xhr.responseText);
+            if (alert && alert !== lastAlert) {
+                lastAlert = alert;
+                $("#run-alert-text").text(alert);
+                $("#run-alert").removeClass("hidden");
             }
             jobLog = jobLog + xhr.responseText;
             const offset = Number(xhr.getResponseHeader("X-Imapsync-Offset"));
@@ -1141,7 +1389,14 @@ $(document).ready(function () {
                 responseText: jobLog
             });
             if (done) {
-                endRun(null);
+                // The exit code is imapsync's own verdict on the run. A
+                // migration that failed must never come back as "complete";
+                // a migration the customer stopped keeps its own wording.
+                // Anything that isn't a clean 0 — a missing or unreadable
+                // header included — is a failure, never a silent success.
+                const exit = Number(xhr.getResponseHeader("X-Imapsync-Exit"));
+                const clean = migrationAborted || 0 === exit;
+                endRun(clean ? null : diagnoseFailure(exit, jobLog));
             }
         };
         xhr.open(
@@ -1161,6 +1416,8 @@ $(document).ready(function () {
         lastEta = null;
         syncError = null;
         lastPhase = null;
+        lastAlert = null;
+        $("#run-alert").addClass("hidden");
         $("#sync-done").css({ display: "none" });
         $("#bt-abort").removeClass("hidden").prop("disabled", false);
         $("#progress-percent").text("…");
@@ -1415,11 +1672,19 @@ $(document).ready(function () {
             $("#confirm-error").addClass("hidden");
 
             const dest = ($("#host2").val() || "").trim();
+            const src = ($("#host1").val() || "").trim();
 
             $("#bt-sync").prop("disabled", true);
             const allowed = await isAllowedDestination(dest);
             if (!allowed) {
-                showRejectModal();
+                // A destination that isn't ours while the *source* is ours is
+                // the form filled in backwards, not an unsupported host — and
+                // it's the one wrong answer we can offer to correct.
+                if (await isAllowedDestination(src)) {
+                    showSwapModal();
+                } else {
+                    showRejectModal();
+                }
                 $("#bt-sync").prop("disabled", false);
                 return;
             }
@@ -1468,8 +1733,14 @@ $(document).ready(function () {
 
         // Second pass — catches messages missed or delivered during the first
         // run (imapsync is idempotent; re-running only copies what's new). Reuses
-        // the credentials already in the form.
+        // the credentials already in the form, after repairing them first if the
+        // failure came with a fix (source and destination the wrong way round).
         $("#bt-artifact").click(function () {
+            if (pendingFix) {
+                const fix = pendingFix;
+                pendingFix = null;
+                fix();
+            }
             $("#sync-done").css({ display: "none" });
             $("#bt-sync").prop("disabled", true);
             imapsync();
@@ -1489,30 +1760,6 @@ $(document).ready(function () {
             window.location.reload();
         });
 
-        const swap = function swap(p1, p2) {
-            const temp = $(p2).val();
-            $(p2).val($(p1).val());
-            $(p1).val(temp);
-        };
-
-        $("#swap").click(function () {
-            // swaping colors can't use swap()
-            const temp1 = $("#account1").css("background-color");
-            const temp2 = $("#account2").css("background-color");
-            $("#account1").css("background-color", temp2);
-            $("#account2").css("background-color", temp1);
-
-            swap($("#user1"), $("#user2"));
-            swap($("#password1"), $("#password2"));
-            swap($("#host1"), $("#host2"));
-            swap($("#subfolder1"), $("#subfolder2"));
-
-            const temp = $("#showpassword1")[0].checked;
-            $("#showpassword1")[0].checked = $("#showpassword2")[0].checked;
-            $("#showpassword2")[0].checked = temp;
-            showpassword("password1", $("#showpassword1")[0]);
-            showpassword("password2", $("#showpassword2")[0]);
-        });
     };
 
     const tests_bilan = function tests_bilan(nb_attended_test) {

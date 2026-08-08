@@ -311,6 +311,13 @@
                             aria-label="Migration progress"></div>
                     </div>
 
+                    <!-- Live warning parsed out of the log: things the customer
+                         can still act on while the copy is running (storage limit) -->
+                    <p id="run-alert" class="run-alert hidden" role="status">
+                        <i class="ph-bold ph-warning-circle" aria-hidden="true"></i>
+                        <span id="run-alert-text"></span>
+                    </p>
+
                     <div class="flex flex-row gap-2 justify-center">
                         <button class="border-2 p-2 rounded-lg" id="toggleConsole" type="button"
                             aria-expanded="false" aria-controls="console-area">Show logs</button>

@@ -101,6 +101,23 @@ guard both check the destination and both read the dev allowlist the script
 serves, and that's the hostname they accept. Source host and passwords can be
 anything; nothing connects anywhere.
 
+To replay a **failing** run instead, put one of these in the **source password**
+(the script prints the list on startup):
+
+| Password | What the fake replays |
+|---|---|
+| `fail:swap` | both mailboxes reject the password → "wrong way round", offers to swap |
+| `fail:auth1` / `fail:auth2` | only the current / only the new mailbox rejects it |
+| `fail:quota` | destination fills up → live alert mid-run, out-of-space at the end |
+| `fail:toobig` | the new server refuses oversized messages |
+| `fail:errors` | finishes with some messages uncopied |
+| `fail:virus` | the new server's virus scanner refuses messages |
+| `fail:flags` | everything copies, read/unread marks don't |
+
+A run that always succeeds can't exercise the error handling: the UI reads
+imapsync's exit code and the error lines it prints, and both only exist on a
+failing run. See "What the customer sees when a run fails" below.
+
 Runs on **8799**, not the static preview's 8765, and stamps a token onto the
 asset URLs. Both are cache defences: a page cached from an `http.server` on 8765
 would otherwise shadow this one and silently serve the real allowlist, and the
@@ -485,6 +502,54 @@ Notes worth knowing:
   milliseconds and needs no job.
 - **imapsync's own tmpdir is unaffected.** It keeps writing its own copy under
   `/var/tmp/imapsync_cgi/<hash>/`; the job log is just its stdout.
+
+---
+
+## What the customer sees when a run fails
+
+imapsync classifies its own failures and exits with a code per type (its
+`%EXIT_TXT` table). The guard writes that code to `exit`, `imapsync-log` returns
+it as `X-Imapsync-Exit`, and the UI turns it into plain English on the
+completion panel. **Anything that isn't a clean `0` — including a missing
+header — is reported as a failure**, never as "Migration complete".
+
+Codes that get their own wording (`SYNC_FAILURES` in `imapsync_form.js`):
+
+| Exit | Shown as |
+|---|---|
+| 101 / 102 / 10 | couldn't reach the current / new / either mail server |
+| 12 | couldn't set up a secure connection |
+| 161 / 162 / 16 | the current / new / a mailbox rejected the sign-in |
+| **113** | **the new mailbox is out of space — raise the limit and re-run** |
+| 114 | the new server refused some messages (→ "too big" when the log says `ERR_APPEND_SIZE`) |
+| 115 / 116 / 117 | couldn't read messages / create folders / open folders |
+| 111 / 112 | finished with some messages uncopied / stopped after too many errors |
+| 118 | this run hit its transfer limit |
+| 119 / 120 | virus scanner refused messages / read-unread marks didn't transfer |
+| 6 | interrupted — but a **customer** abort keeps its own "Migration stopped" panel |
+
+Everything else falls through to a generic "Migration failed" that points at the
+log. Failures where the copy did run and most of it landed are marked `partial`:
+amber warning icon rather than a red cross, and "Try again" finishes the job
+(imapsync only copies what's missing).
+
+Two cases get more than wording:
+
+- **Source and destination the wrong way round.** Caught twice. Before a run:
+  the destination doesn't resolve to a Noxity IP but the *source* does, so the
+  wizard offers to swap all six fields instead of showing the generic "we can't
+  migrate to that destination". After a run: **both** mailboxes rejected their
+  password (`Host1 failure: Error login on` *and* `Host2 failure: Error login on`,
+  with no matching `success login` on either side), which is one form filled in
+  backwards rather than two bad passwords — the panel offers "Swap the accounts
+  and retry". Only the accounts, not the hosts: the destination already passed
+  the Noxity check, so the servers are right.
+- **Storage limit, live.** The destination's quota is the one thing a customer
+  can still fix *while the copy is running*, so the three lines imapsync prints
+  about it (`% full`, `Quota limit will be exceeded!`, `[OVERQUOTA]`) surface as
+  an amber banner on the progress card as they arrive, escalating in that order.
+
+`server/dev-server.py` can replay every one of these — see "Local preview".
 
 ---
 
